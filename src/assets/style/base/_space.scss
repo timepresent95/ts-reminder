@@ -1,0 +1,68 @@
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.my-auto {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+.mr-auto {
+  margin-right: auto;
+}
+
+$space-sizes: 4, 6, 8, 12, 16, 20, 24, 28, 32, 40, 60, 120;
+
+@each $size in $space-sizes {
+  .m-#{$size} {
+    margin: $size+px;
+  }
+  .mt-#{$size} {
+    margin-top: $size+px;
+  }
+  .mb-#{$size} {
+    margin-bottom: $size+px;
+  }
+  .my-#{$size} {
+    margin-top: $size+px;
+    margin-bottom: $size+px;
+  }
+  .mr-#{$size} {
+    margin-right: $size+px;
+  }
+  .ml-#{$size} {
+    margin-left: $size+px;
+  }
+  .mx-#{$size} {
+    margin-right: $size+px;
+    margin-left: $size+px;
+  }
+  .p-#{$size} {
+    padding: $size+px;
+  }
+  .pt-#{$size} {
+    padding-top: $size+px;
+  }
+  .pb-#{$size} {
+    padding-bottom: $size+px;
+  }
+  .py-#{$size} {
+    padding-top: $size+px;
+    padding-bottom: $size+px;
+  }
+  .pr-#{$size} {
+    padding-right: $size+px;
+  }
+  .pl-#{$size} {
+    padding-left: $size+px;
+  }
+  .px-#{$size} {
+    padding-right: $size+px;
+    padding-left: $size+px;
+  }
+}

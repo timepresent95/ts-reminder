@@ -1,0 +1,79 @@
+@use "../abstracts/variables";
+
+.font-regular {
+  font-family: variables.$font-family;
+  font-weight: 400;
+}
+
+.font-bold {
+  font-family: variables.$font-family;
+  font-weight: 700;
+}
+
+$fontSizes: 64, 40, 34, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13;
+@each $size in $fontSizes {
+  .font-size-#{$size} {
+    font-size: $size + px;
+  }
+}
+
+.text-h1 {
+  @extend .font-regular;
+  @extend .font-size-34;
+  line-height: 1.4;
+}
+
+.text-h1b {
+  @extend .text-h1;
+  @extend .font-bold;
+}
+
+.text-h2 {
+  @extend .font-regular;
+  @extend .font-size-25;
+  line-height: 1.4;
+}
+
+.text-h2b {
+  @extend .text-h2;
+  @extend .font-bold;
+}
+
+.text-body1 {
+  @extend .font-regular;
+  @extend .font-size-14;
+  line-height: 1.6;
+}
+
+.text-body1b {
+  @extend .text-body1;
+  @extend .font-bold;
+}
+
+.text-today {
+  color: variables.$today;
+}
+
+.text-error {
+  color: variables.$error;
+}
+
+.text-g1 {
+  color: variables.$g1;
+}
+
+
+.text-g2 {
+  color: variables.$g2;
+}
+
+
+.text-g3 {
+  color: variables.$g3;
+}
+
+
+.text-g4 {
+  color: variables.$g4;
+}
+
