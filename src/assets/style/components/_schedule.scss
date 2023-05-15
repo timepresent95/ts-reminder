@@ -1,0 +1,57 @@
+@use "../abstracts/variables";
+
+.schedule-template {
+  display: none;
+  transform: scaleY(0);
+  width: 100%;
+
+  &-active {
+    display: flex;
+    transform: scaleY(100%);
+  }
+
+  input, textarea {
+    width: 100%;
+    display: block;
+    border: none;
+    background-color: transparent;
+  }
+
+  textarea {
+    resize: none;
+    overflow-y: hidden;
+  }
+}
+
+.schedule-item {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: solid 1px variables.$g4;
+  padding: 6px 20px 8px 0;
+}
+
+.schedule-status {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: solid 1px variables.$g3;
+  border-radius: 50%;
+  position: relative;
+  margin-right: 16px;
+
+  &-complete {
+    border-color: variables.$today;
+
+    &:after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: variables.$today;
+    }
+  }
+}

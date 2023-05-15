@@ -1,0 +1,13 @@
+@use "../abstracts/variables";
+@forward "../components/schedule";
+
+.today {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+
+  .all-completed {
+    align-self: center;
+    justify-self: center;
+  }
+}

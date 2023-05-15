@@ -1,0 +1,21 @@
+@use "../abstracts/variables";
+
+header {
+  position: sticky;
+  top: 0;
+
+  .add-button {
+    font-size: 25px;
+    width: 24px;
+    height: 24px;
+    line-height: 0;
+    padding: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+
+    &:hover {
+      background-color: variables.$g4;
+    }
+  }
+}
