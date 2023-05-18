@@ -1,28 +1,5 @@
 @use "../abstracts/variables";
 
-.schedule-template {
-  display: none;
-  transform: scaleY(0);
-  width: 100%;
-
-  &-active {
-    display: flex;
-    transform: scaleY(100%);
-  }
-
-  input, textarea {
-    width: 100%;
-    display: block;
-    border: none;
-    background-color: transparent;
-  }
-
-  textarea {
-    resize: none;
-    overflow-y: hidden;
-  }
-}
-
 .schedule-item {
   display: flex;
   align-items: flex-start;
@@ -53,5 +30,28 @@
       border-radius: 50%;
       background-color: variables.$today;
     }
+  }
+}
+
+.schedule-template {
+  display: none;
+  transform: scaleY(0);
+  width: 100%;
+
+  &-active {
+    display: flex;
+    transform: scaleY(100%);
+  }
+
+  input, textarea {
+    width: 100%;
+    display: block;
+    border: none;
+    background-color: transparent;
+  }
+
+  textarea {
+    resize: none;
+    overflow-y: hidden;
   }
 }

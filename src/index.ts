@@ -1,112 +1,115 @@
-import "./assets/style/style.scss";
+import './assets/style/style.scss';
 
-import {Schedule} from './Schedule'
-import {isListElement} from "./elementTypeGuard";
+import Schedule from './Schedule';
+import { isListElement } from './elementTypeGuard';
 
 const today = document.body.querySelector('main');
 const allCompletedEl = document.querySelector('.all-completed');
 const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
-const scheduleTemplateEl = today.querySelector('.schedule-template')
-const scheduleTemplateTitleEl = scheduleTemplateEl.querySelector('.schedule-title') as HTMLInputElement
-const scheduleTemplateNotesEl = scheduleTemplateEl.querySelector('.schedule-notes') as HTMLTextAreaElement
 
-const schedules: Schedule[] = [];
+const schedules: Schedule[] = [{ title: '1', notes: '1', key: '1', isCompleted: true }];
 let showScheduleTemplate = false;
-
-render();
-
-scheduleTemplateNotesEl.addEventListener('input', () => {
-    const rowCount = scheduleTemplateNotesEl.value.split('\n').length;
-    scheduleTemplateNotesEl.setAttribute('rows', Math.min(5, rowCount).toString());
-})
-
-function createSchedule() {
-    const schedule = new Schedule(scheduleTemplateTitleEl.value,
-        scheduleTemplateNotesEl.value.trim().replace(/\n/gi, '</br>'),
-        schedules.length.toString()
-    );
-    scheduleTemplateTitleEl.value = ''
-    scheduleTemplateNotesEl.value = ''
-    schedules.push(schedule);
-    render();
-}
-
-function render() {
-    if (!showScheduleTemplate && schedules.length === 0) {
-        allCompletedEl.classList.remove('d-none');
-    } else {
-        allCompletedEl.classList.add('d-none');
-    }
-    schedulesEl.innerHTML = schedules.sort((a, b) => {
-        if (a.isCompleted && !b.isCompleted) {
-            return 1;
-        } else if (!a.isCompleted && b.isCompleted) {
-            return -1;
-        } else {
-            return 0;
-        }
-    }).map(({title, notes, isCompleted, key}) => `
-        <li data-key="${key}" class="schedule-item">
-            <button class="schedule-status ${isCompleted ? 'schedule-status-complete' : ''}"></button>
-            <div class="schedule-content">
-                <p class="text-body1">${title}</p>
-                ${notes === '' ? '' : '<p class="text-body1 text-g1">' + notes + '</p>'}
-            </div>
-        </li>`).join('');
-}
-
-today.addEventListener('click', (e) => {
-    allCompletedEl.classList.add('d-none');
-    if (e.target !== scheduleTemplateNotesEl && scheduleTemplateTitleEl.value !== "") {
-        createSchedule();
-    }
-    if (e.target !== today) {
-        return;
-    }
-    showScheduleTemplate = !showScheduleTemplate;
-    if (showScheduleTemplate) {
-        scheduleTemplateEl.classList.add('schedule-template-active')
-    } else {
-        scheduleTemplateEl.classList.remove('schedule-template-active')
-    }
-    scheduleTemplateTitleEl.value = ''
-    scheduleTemplateNotesEl.setAttribute('rows', '1');
-    scheduleTemplateNotesEl.value = ''
-    scheduleTemplateTitleEl.focus()
-    render();
-})
-
-addButton.addEventListener('click', () => {
-    showScheduleTemplate = true;
-    scheduleTemplateEl.classList.add('schedule-template-active')
-    scheduleTemplateNotesEl.setAttribute('rows', '1');
-    scheduleTemplateTitleEl.focus();
-    render();
-})
+const scheduleTemplateEl = document.createElement('li');
+scheduleTemplateEl.classList.add('schedule-template', 'schedule-item');
+scheduleTemplateEl.innerHTML = `
+          <button class='schedule-status'>&nbsp;</button>
+           <div class='schedule-content'>
+               <input class='schedule-title text-body1'/>
+               <textarea class='schedule-notes text-body1 text-g1' placeholder='Notes' rows='1'></textarea>
+           </div>`;
+const scheduleTemplateTitleEl = scheduleTemplateEl.querySelector('.schedule-title') as HTMLInputElement;
+const scheduleTemplateNotesEl = scheduleTemplateEl.querySelector('.schedule-notes') as HTMLTextAreaElement;
 
 scheduleTemplateTitleEl.addEventListener('keyup', (e) => {
-    if (e.code !== 'Enter') {
-        return;
-    }
-    if (scheduleTemplateTitleEl.value !== "") {
-        createSchedule()
-        scheduleTemplateEl.classList.add('schedule-template-active')
-        scheduleTemplateTitleEl.focus()
-    } else {
-        showScheduleTemplate = false;
-        scheduleTemplateEl.classList.remove('schedule-template-active')
-    }
+  if (e.code !== 'Enter') {
+    return
+  }
+  if(scheduleTemplateTitleEl.value.trim() === '') {
+    showScheduleTemplate = false;
+  }
+  renderSchedules();
 })
+scheduleTemplateNotesEl.addEventListener('input', (e) => {
+  if (e.target instanceof HTMLInputElement) {
+    const rowCount = e.target.value.split('\n').length;
+    e.target.setAttribute('rows', Math.min(5, rowCount).toString());
+  }
+});
+
+renderSchedules();
+
+function createSchedule() {
+  if(scheduleTemplateTitleEl.value.trim() !== '') {
+    const schedule = new Schedule(
+      scheduleTemplateTitleEl.value,
+      scheduleTemplateNotesEl.value.trim().replace(/\n/gi, '</br>'),
+      schedules.length.toString(),
+    );
+    schedules.push(schedule);
+  }
+  scheduleTemplateTitleEl.value = '';
+  scheduleTemplateNotesEl.value = '';
+}
+
+// 완료된 항목이 뒤로
+function compareByIsCompleted(first: Schedule, second: Schedule) {
+  if (first.isCompleted === second.isCompleted) {
+    return 0;
+  } else if (first.isCompleted) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
+
+function renderSchedules() {
+  createSchedule()
+  if (schedules.length === 0) {
+    allCompletedEl.classList.remove('d-none');
+    schedulesEl.innerHTML = '';
+    return;
+  }
+  allCompletedEl.classList.add('d-none');
+  schedulesEl.innerHTML = schedules.sort(compareByIsCompleted).map(({ title, notes, isCompleted, key }) => `
+        <li data-key='${key}' class='schedule-item'>
+            <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
+            <div class='schedule-content'>
+                <p class='schedule-title text-body1'>${title}</p>
+                ${notes === '' ? '' : '<p class="schedule-notes text-body1 text-g1">' + notes + '</p>'}
+            </div>
+        </li>`).join('');
+  schedulesEl.appendChild(scheduleTemplateEl);
+  if (showScheduleTemplate) {
+    scheduleTemplateEl.classList.add('schedule-template-active');
+    scheduleTemplateTitleEl.focus();
+  } else {
+    scheduleTemplateEl.classList.remove('schedule-template-active');
+  }
+}
+
+
+today.addEventListener('click', (e) => {
+  if (e.target !== today) {
+    return;
+  }
+  showScheduleTemplate = !showScheduleTemplate;
+  renderSchedules();
+});
+
+addButton.addEventListener('click', () => {
+  showScheduleTemplate = true;
+  renderSchedules();
+});
 
 schedulesEl.addEventListener('click', (e) => {
-    if (e.target instanceof Element && e.target.classList.contains('schedule-status')) {
-        e.target.classList.toggle('schedule-status-complete')
-        const scheduleItemEl = e.target.closest('.schedule-item');
-        if (isListElement(scheduleItemEl)) {
-            const {key} = scheduleItemEl.dataset;
-            const targetSchedule = schedules.find((v) => v.key === key);
-            targetSchedule.isCompleted = !targetSchedule.isCompleted;
-        }
+  if (e.target instanceof Element && e.target.classList.contains('schedule-status')) {
+    e.target.classList.toggle('schedule-status-complete');
+    const scheduleItemEl = e.target.closest('.schedule-item');
+    if (isListElement(scheduleItemEl)) {
+      const { key } = scheduleItemEl.dataset;
+      const targetSchedule = schedules.find((v) => v.key === key);
+      targetSchedule.isCompleted = !targetSchedule.isCompleted;
     }
-})
+  }
+});

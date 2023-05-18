@@ -1,4 +1,4 @@
-export class Schedule {
+export default class Schedule {
     title: string;
     notes: string;
     isCompleted: boolean;
