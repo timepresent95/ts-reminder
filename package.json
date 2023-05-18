@@ -9,7 +9,7 @@
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
     "watch": "webpack --watch",
-    "serve": "webpack serve"
+    "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack serve"
   },
   "keywords": [],
   "author": "",
@@ -17,8 +17,17 @@
   "devDependencies": {
     "@types/node": "^20.1.2",
     "@types/webpack": "^5.28.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
     "@webpack-cli/generators": "^3.0.2",
     "css-loader": "^6.7.3",
+    "eslint": "^8.40.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-standard-with-typescript": "^34.0.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
     "html-webpack-plugin": "^5.5.1",
     "mini-css-extract-plugin": "^2.7.5",
     "prettier": "^2.8.3",
