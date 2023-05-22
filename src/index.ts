@@ -31,7 +31,7 @@ scheduleTemplateTitleEl.addEventListener('keyup', (e) => {
   renderSchedules();
 })
 scheduleTemplateNotesEl.addEventListener('input', (e) => {
-  if (e.target instanceof HTMLInputElement) {
+  if (e.target instanceof HTMLTextAreaElement) {
     const rowCount = e.target.value.split('\n').length;
     e.target.setAttribute('rows', Math.min(5, rowCount).toString());
   }
