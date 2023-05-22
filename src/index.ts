@@ -23,24 +23,25 @@ const scheduleTemplateNotesEl = scheduleTemplateEl.querySelector('.schedule-note
 
 scheduleTemplateTitleEl.addEventListener('keyup', (e) => {
   if (e.code !== 'Enter') {
-    return
+    return;
   }
-  if(scheduleTemplateTitleEl.value.trim() === '') {
+  if (scheduleTemplateTitleEl.value.trim() === '') {
     showScheduleTemplate = false;
   }
   renderSchedules();
-})
+});
 scheduleTemplateNotesEl.addEventListener('input', (e) => {
   if (e.target instanceof HTMLTextAreaElement) {
-    const rowCount = e.target.value.split('\n').length;
-    e.target.setAttribute('rows', Math.min(5, rowCount).toString());
+    const { value, setAttribute } = e.target;
+    const rowCount = value.split('\n').length;
+    setAttribute('rows', Math.min(5, rowCount).toString());
   }
 });
 
 renderSchedules();
 
 function createSchedule() {
-  if(scheduleTemplateTitleEl.value.trim() !== '') {
+  if (scheduleTemplateTitleEl.value.trim() !== '') {
     const schedule = new Schedule(
       scheduleTemplateTitleEl.value,
       scheduleTemplateNotesEl.value.trim().replace(/\n/gi, '</br>'),
@@ -64,7 +65,7 @@ function compareByIsCompleted(first: Schedule, second: Schedule) {
 }
 
 function renderSchedules() {
-  createSchedule()
+  createSchedule();
   if (schedules.length === 0) {
     allCompletedEl.classList.remove('d-none');
     schedulesEl.innerHTML = '';
@@ -103,13 +104,26 @@ addButton.addEventListener('click', () => {
 });
 
 schedulesEl.addEventListener('click', (e) => {
-  if (e.target instanceof Element && e.target.classList.contains('schedule-status')) {
-    e.target.classList.toggle('schedule-status-complete');
-    const scheduleItemEl = e.target.closest('.schedule-item');
-    if (isListElement(scheduleItemEl)) {
-      const { key } = scheduleItemEl.dataset;
-      const targetSchedule = schedules.find((v) => v.key === key);
-      targetSchedule.isCompleted = !targetSchedule.isCompleted;
-    }
+  const { target } = e;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const scheduleItemEl = target.closest('.schedule-item');
+  if (!isListElement(scheduleItemEl)) {
+    return;
+  }
+
+  const { key } = scheduleItemEl.dataset;
+
+  if (target.classList.contains('schedule-status')) {
+    clickScheduleStatus(target, key)
   }
 });
+
+function clickScheduleStatus(target: Element, key: string) {
+  target.classList.toggle('schedule-status-complete');
+  const targetSchedule = schedules.find((v) => v.key === key);
+  targetSchedule.isCompleted = !targetSchedule.isCompleted;
+  return;
+}
