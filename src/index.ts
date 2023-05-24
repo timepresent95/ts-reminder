@@ -1,17 +1,18 @@
 import './assets/style/style.scss';
 
 import Schedule from './Schedule';
-import { isListElement } from './elementTypeGuard';
 
 const today = document.body.querySelector('main');
 const allCompletedEl = document.querySelector('.all-completed');
 const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
 
-const schedules: Schedule[] = [{ title: '1', notes: '1', key: '1', isCompleted: true }];
+let schedules: Schedule[] = [{ title: '1', notes: '1', key: createRandomKey(), isCompleted: true }];
 let showScheduleTemplate = false;
+let selectedItemKey: string | null = null;
 const scheduleTemplateEl = document.createElement('li');
 scheduleTemplateEl.classList.add('schedule-template', 'schedule-item');
+scheduleTemplateEl.dataset.key = 'template';
 scheduleTemplateEl.innerHTML = `
           <button class='schedule-status'>&nbsp;</button>
            <div class='schedule-content'>
@@ -30,30 +31,15 @@ scheduleTemplateTitleEl.addEventListener('keyup', (e) => {
   }
   renderSchedules();
 });
+
 scheduleTemplateNotesEl.addEventListener('input', (e) => {
   if (e.target instanceof HTMLTextAreaElement) {
-    const { value, setAttribute } = e.target;
-    const rowCount = value.split('\n').length;
-    setAttribute('rows', Math.min(5, rowCount).toString());
+    const rowCount = e.target.value.split('\n').length;
+    e.target.setAttribute('rows', Math.min(5, rowCount).toString());
   }
 });
 
-renderSchedules();
-
-function createSchedule() {
-  if (scheduleTemplateTitleEl.value.trim() !== '') {
-    const schedule = new Schedule(
-      scheduleTemplateTitleEl.value,
-      scheduleTemplateNotesEl.value.trim().replace(/\n/gi, '</br>'),
-      schedules.length.toString(),
-    );
-    schedules.push(schedule);
-  }
-  scheduleTemplateTitleEl.value = '';
-  scheduleTemplateNotesEl.value = '';
-}
-
-// 완료된 항목이 뒤로
+// 완료된 항목이 뒤로 가도록 정렬
 function compareByIsCompleted(first: Schedule, second: Schedule) {
   if (first.isCompleted === second.isCompleted) {
     return 0;
@@ -64,16 +50,31 @@ function compareByIsCompleted(first: Schedule, second: Schedule) {
   }
 }
 
+function createRandomKey(): string {
+  return (Math.random() + 1).toString(36).substring(7);
+}
+
 function renderSchedules() {
-  createSchedule();
+  if (scheduleTemplateTitleEl.value.trim() !== '') {
+    const schedule = new Schedule(
+      scheduleTemplateTitleEl.value,
+      scheduleTemplateNotesEl.value.trim().replace(/\n/gi, '</br>'),
+      createRandomKey(),
+    );
+    schedules.push(schedule);
+  }
+  scheduleTemplateNotesEl.setAttribute('rows', '1');
+  scheduleTemplateTitleEl.value = '';
+  scheduleTemplateNotesEl.value = '';
   if (schedules.length === 0) {
     allCompletedEl.classList.remove('d-none');
     schedulesEl.innerHTML = '';
     return;
   }
   allCompletedEl.classList.add('d-none');
+  schedules = schedules.filter(({ title }) => title.trim() !== '');
   schedulesEl.innerHTML = schedules.sort(compareByIsCompleted).map(({ title, notes, isCompleted, key }) => `
-        <li data-key='${key}' class='schedule-item'>
+        <li data-key='${key}' class='schedule-item ${key === selectedItemKey ? 'selected' : ''}'>
             <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
             <div class='schedule-content'>
                 <p class='schedule-title text-body1'>${title}</p>
@@ -105,25 +106,67 @@ addButton.addEventListener('click', () => {
 
 schedulesEl.addEventListener('click', (e) => {
   const { target } = e;
-  if (!(target instanceof Element)) {
+  if (!(target instanceof HTMLElement)) {
     return;
   }
 
   const scheduleItemEl = target.closest('.schedule-item');
-  if (!isListElement(scheduleItemEl)) {
+  if (!(scheduleItemEl instanceof HTMLElement)) {
     return;
   }
 
   const { key } = scheduleItemEl.dataset;
-
-  if (target.classList.contains('schedule-status')) {
-    clickScheduleStatus(target, key)
+  if (key === 'template') {
+    return;
+  } else if (target.classList.contains('schedule-status')) {
+    clickScheduleStatus(target, key);
+  } else if (target.classList.contains('schedule-title')) {
+    makeEditable(target, key, 'title');
+  } else if (target.classList.contains('schedule-notes')) {
+    makeEditable(target, key, 'notes');
+  } else {
+    selectedItemKey = key;
+    renderSchedules();
   }
 });
 
-function clickScheduleStatus(target: Element, key: string) {
+function clickScheduleStatus(target: HTMLElement, key: string) {
   target.classList.toggle('schedule-status-complete');
   const targetSchedule = schedules.find((v) => v.key === key);
   targetSchedule.isCompleted = !targetSchedule.isCompleted;
   return;
 }
+
+function makeEditable(targetEl: HTMLElement, key: string, type: 'title' | 'notes') {
+  targetEl.setAttribute('contenteditable', 'true');
+  targetEl.focus();
+  console.log(targetEl)
+
+  function keyupEventListener(e: KeyboardEvent) {
+    if (e.code !== 'Enter') {
+      return;
+    }
+    targetEl.blur();
+    targetEl.removeEventListener('keyup', blurEventListener);
+  }
+
+  if (type === 'title') {
+    targetEl.addEventListener('keyup', keyupEventListener);
+  }
+
+  function blurEventListener() {
+    targetEl.setAttribute('contenteditable', 'false');
+    const targetSchedule = schedules.find((v) => v.key === key);
+    targetSchedule[type] = targetEl.innerText.trim().replace(/\n/gi, '</br>');
+    renderSchedules();
+    targetEl.removeEventListener('blur', blurEventListener);
+  }
+
+  targetEl.addEventListener('blur', blurEventListener);
+}
+
+function init() {
+  renderSchedules();
+}
+
+init();
