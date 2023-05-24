@@ -9,7 +9,7 @@ const schedulesEl = document.querySelector('.schedules');
 
 let schedules: Schedule[] = [];
 let showScheduleTemplate = false;
-let selectedItemKey: string[] = [];
+let selectedItemKeys: string[] = [];
 const scheduleTemplateEl = document.createElement('li');
 scheduleTemplateEl.classList.add('schedule-template', 'schedule-item');
 scheduleTemplateEl.dataset.key = 'template';
@@ -21,6 +21,21 @@ scheduleTemplateEl.innerHTML = `
            </div>`;
 const scheduleTemplateTitleEl = scheduleTemplateEl.querySelector('.schedule-title') as HTMLInputElement;
 const scheduleTemplateNotesEl = scheduleTemplateEl.querySelector('.schedule-notes') as HTMLTextAreaElement;
+
+window.addEventListener('keydown', (e) => {
+  if (selectedItemKeys.length === 0) {
+    return;
+  }
+  const lastSelectedItemKey = selectedItemKeys[selectedItemKeys.length - 1];
+  let indexCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
+  if (e.code === 'ArrowUp') {
+    indexCursor = Math.max(0, indexCursor - 1);
+  } else if (e.code === 'ArrowDown') {
+    indexCursor = Math.min(schedules.length - 1, indexCursor + 1);
+  }
+  selectedItemKeys = [schedules[indexCursor].key];
+  renderSchedules();
+});
 
 scheduleTemplateTitleEl.addEventListener('keyup', (e) => {
   if (e.code !== 'Enter') {
@@ -72,9 +87,9 @@ function renderSchedules() {
     return;
   }
   allCompletedEl.classList.add('d-none');
-  schedules = schedules.filter(({ title }) => title.trim() !== '');
-  schedulesEl.innerHTML = schedules.sort(compareByIsCompleted).map(({ title, notes, isCompleted, key }) => `
-        <li data-key='${key}' class='schedule-item ${selectedItemKey.includes(key) ? 'selected' : ''}'>
+  schedules = schedules.filter(({ title }) => title.trim() !== '').sort(compareByIsCompleted);
+  schedulesEl.innerHTML = schedules.map(({ title, notes, isCompleted, key }) => `
+        <li data-key='${key}' class='schedule-item ${selectedItemKeys.includes(key) ? 'selected' : ''}'>
             <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
             <div class='schedule-content'>
                 <p class='schedule-title text-body1'>${title}</p>
@@ -108,8 +123,9 @@ addButton.addEventListener('click', () => {
   renderSchedules();
 });
 
-schedulesEl.addEventListener('click', (e) => {
+schedulesEl.addEventListener('click', (e: PointerEvent) => {
   const { target } = e;
+
   if (!(target instanceof HTMLElement)) {
     return;
   }
@@ -129,8 +145,7 @@ schedulesEl.addEventListener('click', (e) => {
   } else if (target.classList.contains('schedule-notes')) {
     makeEditable(target, key, 'notes');
   } else {
-    selectedItemKey = [key];
-    renderSchedules();
+    selectItem(e, key);
   }
 });
 
@@ -144,7 +159,6 @@ function clickScheduleStatus(target: HTMLElement, key: string) {
 function makeEditable(targetEl: HTMLElement, key: string, type: 'title' | 'notes') {
   targetEl.setAttribute('contenteditable', 'true');
   targetEl.focus();
-  console.log(targetEl)
 
   function keyupEventListener(e: KeyboardEvent) {
     if (e.code !== 'Enter') {
@@ -167,6 +181,23 @@ function makeEditable(targetEl: HTMLElement, key: string, type: 'title' | 'notes
   }
 
   targetEl.addEventListener('blur', blurEventListener);
+}
+
+function selectItem(e: PointerEvent, key: string) {
+  if (e.metaKey) {
+    const selectedKeyIdx = selectedItemKeys.findIndex((item) => item === key);
+    if (selectedKeyIdx === -1) {
+      selectedItemKeys.push(key);
+    } else {
+      selectedItemKeys.splice(selectedKeyIdx, 1);
+    }
+  } else if (e.shiftKey) {
+
+  } else {
+    selectedItemKeys = [key];
+  }
+  renderSchedules();
+
 }
 
 function init() {
