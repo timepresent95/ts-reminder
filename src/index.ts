@@ -7,9 +7,9 @@ const allCompletedEl = document.querySelector('.all-completed');
 const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
 
-let schedules: Schedule[] = [{ title: '1', notes: '1', key: createRandomKey(), isCompleted: true }];
+let schedules: Schedule[] = [];
 let showScheduleTemplate = false;
-let selectedItemKey: string | null = null;
+let selectedItemKey: string[] = [];
 const scheduleTemplateEl = document.createElement('li');
 scheduleTemplateEl.classList.add('schedule-template', 'schedule-item');
 scheduleTemplateEl.dataset.key = 'template';
@@ -66,7 +66,7 @@ function renderSchedules() {
   scheduleTemplateNotesEl.setAttribute('rows', '1');
   scheduleTemplateTitleEl.value = '';
   scheduleTemplateNotesEl.value = '';
-  if (schedules.length === 0) {
+  if (schedules.length === 0 && !showScheduleTemplate) {
     allCompletedEl.classList.remove('d-none');
     schedulesEl.innerHTML = '';
     return;
@@ -74,7 +74,7 @@ function renderSchedules() {
   allCompletedEl.classList.add('d-none');
   schedules = schedules.filter(({ title }) => title.trim() !== '');
   schedulesEl.innerHTML = schedules.sort(compareByIsCompleted).map(({ title, notes, isCompleted, key }) => `
-        <li data-key='${key}' class='schedule-item ${key === selectedItemKey ? 'selected' : ''}'>
+        <li data-key='${key}' class='schedule-item ${selectedItemKey.includes(key) ? 'selected' : ''}'>
             <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
             <div class='schedule-content'>
                 <p class='schedule-title text-body1'>${title}</p>
@@ -92,7 +92,11 @@ function renderSchedules() {
 
 
 today.addEventListener('click', (e) => {
-  if (e.target !== today) {
+  const { target } = e;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  if (target.closest('.schedule-item')) {
     return;
   }
   showScheduleTemplate = !showScheduleTemplate;
@@ -125,7 +129,7 @@ schedulesEl.addEventListener('click', (e) => {
   } else if (target.classList.contains('schedule-notes')) {
     makeEditable(target, key, 'notes');
   } else {
-    selectedItemKey = key;
+    selectedItemKey = [key];
     renderSchedules();
   }
 });
