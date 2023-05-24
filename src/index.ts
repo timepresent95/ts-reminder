@@ -27,13 +27,24 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const lastSelectedItemKey = selectedItemKeys[selectedItemKeys.length - 1];
-  let indexCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
+  let currentCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
+  let nextCursor: number;
+
   if (e.code === 'ArrowUp') {
-    indexCursor = Math.max(0, indexCursor - 1);
+    nextCursor = Math.max(0, currentCursor - 1);
   } else if (e.code === 'ArrowDown') {
-    indexCursor = Math.min(schedules.length - 1, indexCursor + 1);
+    nextCursor = Math.min(schedules.length - 1, currentCursor + 1);
+  } else {
+    return;
   }
-  selectedItemKeys = [schedules[indexCursor].key];
+  if (e.shiftKey && currentCursor !== nextCursor) {
+    const duplicatedItemIdx = selectedItemKeys.findIndex((item) => item === schedules[nextCursor].key);
+    duplicatedItemIdx !== -1 && selectedItemKeys.splice(duplicatedItemIdx, 1);
+    selectedItemKeys.push(schedules[nextCursor].key);
+  }
+  if (!e.shiftKey) {
+    selectedItemKeys = [schedules[nextCursor].key];
+  }
   renderSchedules();
 });
 
@@ -192,7 +203,6 @@ function selectItem(e: PointerEvent, key: string) {
       selectedItemKeys.splice(selectedKeyIdx, 1);
     }
   } else if (e.shiftKey) {
-
   } else {
     selectedItemKeys = [key];
   }
