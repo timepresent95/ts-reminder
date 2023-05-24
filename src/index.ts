@@ -29,11 +29,16 @@ window.addEventListener('keydown', (e) => {
   const lastSelectedItemKey = selectedItemKeys[selectedItemKeys.length - 1];
   let currentCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
   let nextCursor: number;
-
-  if (e.code === 'ArrowUp') {
-    nextCursor = Math.max(0, currentCursor - 1);
+  console.log(e.code);
+  if (e.code === 'Backspace') {
+    schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
+    selectedItemKeys = [];
+    renderSchedules();
+    return;
   } else if (e.code === 'ArrowDown') {
     nextCursor = Math.min(schedules.length - 1, currentCursor + 1);
+  } else if (e.code === 'ArrowUp') {
+    nextCursor = Math.max(0, currentCursor - 1);
   } else {
     return;
   }
@@ -207,7 +212,6 @@ function selectItem(e: PointerEvent, key: string) {
     selectedItemKeys = [key];
   }
   renderSchedules();
-
 }
 
 function init() {
