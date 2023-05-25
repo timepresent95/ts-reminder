@@ -1,0 +1,26 @@
+@use "../abstracts/variables";
+
+.context-menu {
+  padding: 4px 4px;
+  position: fixed;
+  width: 150px;
+  background-color: variables.$g5;
+  border-radius: 5px;
+  border: 1px solid variables.$g3;
+  display: none;
+  z-index: 10000;
+
+  &-visible {
+    display: block;
+  }
+
+  &-item {
+    cursor: pointer;
+    padding: 4px 4px;
+    border-radius: 5px;
+
+    &:hover {
+      background-color: variables.$b1;
+    }
+  }
+}

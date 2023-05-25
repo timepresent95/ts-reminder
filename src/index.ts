@@ -9,7 +9,9 @@ const schedulesEl = document.querySelector('.schedules');
 
 let schedules: Schedule[] = [];
 let showScheduleTemplate = false;
+let showCustomContextMenu = false;
 let selectedItemKeys: string[] = [];
+let selectedContextItemKeys: string[] = [];
 const scheduleTemplateEl = document.createElement('li');
 scheduleTemplateEl.classList.add('schedule-template', 'schedule-item');
 scheduleTemplateEl.dataset.key = 'template';
@@ -29,7 +31,6 @@ window.addEventListener('keydown', (e) => {
   const lastSelectedItemKey = selectedItemKeys[selectedItemKeys.length - 1];
   let currentCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
   let nextCursor: number;
-  console.log(e.code);
   if (e.code === 'Backspace') {
     schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
     selectedItemKeys = [];
@@ -124,7 +125,7 @@ function renderSchedules() {
 
 today.addEventListener('click', (e) => {
   const { target } = e;
-  if (!(target instanceof HTMLElement)) {
+  if (!(target instanceof HTMLElement) || showCustomContextMenu) {
     return;
   }
   if (target.closest('.schedule-item')) {
@@ -135,6 +136,9 @@ today.addEventListener('click', (e) => {
 });
 
 addButton.addEventListener('click', () => {
+  if(showCustomContextMenu) {
+    return;
+  }
   showScheduleTemplate = true;
   renderSchedules();
 });
@@ -142,7 +146,7 @@ addButton.addEventListener('click', () => {
 schedulesEl.addEventListener('click', (e: PointerEvent) => {
   const { target } = e;
 
-  if (!(target instanceof HTMLElement)) {
+  if (!(target instanceof HTMLElement) || showCustomContextMenu) {
     return;
   }
 
@@ -213,6 +217,90 @@ function selectItem(e: PointerEvent, key: string) {
   }
   renderSchedules();
 }
+
+const customContextMenu = document.getElementById('context-menu');
+
+//FIXME: 표시할 수 없는 상태가 되면 상하좌우를 유연하게 변경하도록 해야 함.
+function normalizePosition(mouseX: number, mouseY: number) {
+  const { left: scopeOffsetX, top: scopeOffsetY } = document.body.getBoundingClientRect();
+
+  const scopeX = mouseX - scopeOffsetX;
+  const scopeY = mouseY - scopeOffsetY;
+
+  const outOfBoundsOnX = scopeX + customContextMenu.clientWidth > document.body.clientWidth;
+  const outOfBoundsOnY = scopeY + customContextMenu.clientHeight > document.body.clientHeight;
+
+  let normalizedX = mouseX;
+  let normalizedY = mouseY;
+
+  if (outOfBoundsOnX) {
+    normalizedX = scopeOffsetX + document.body.clientWidth - customContextMenu.clientWidth;
+  }
+
+  if (outOfBoundsOnY) {
+    normalizedY = scopeOffsetY + document.body.clientHeight - customContextMenu.clientHeight;
+  }
+
+  return { normalizedX, normalizedY };
+}
+
+customContextMenu.addEventListener('click', (e) => {
+  const { target } = e;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  if(target.dataset.function === 'delete') {
+    schedules = schedules.filter(({key}) => !selectedItemKeys.includes(key));
+    renderSchedules();
+  }
+  customContextMenu.classList.remove('context-menu-visible');
+  setTimeout(() => {
+    showCustomContextMenu = false;
+  });
+})
+
+document.body.addEventListener('contextmenu', (e: MouseEvent) => {
+  e.preventDefault();
+  showScheduleTemplate = false;
+  const { target } = e;
+
+  if (!(target instanceof HTMLElement)) {
+    renderSchedules();
+    return;
+  }
+
+  const scheduleItemEl = target.closest('.schedule-item')
+
+  if(!(scheduleItemEl instanceof HTMLElement) || scheduleItemEl.dataset.key === 'template') {
+    customContextMenu.classList.remove('context-menu-visible');
+    showCustomContextMenu = false;
+    renderSchedules();
+    return;
+  }
+
+  selectedItemKeys = [scheduleItemEl.dataset.key];
+  renderSchedules();
+
+  const { clientX, clientY } = e;
+  const { normalizedX, normalizedY } = normalizePosition(clientX, clientY);
+  customContextMenu.style.left = normalizedX + 'px';
+  customContextMenu.style.top = normalizedY + 'px';
+  customContextMenu.classList.add('context-menu-visible');
+  showCustomContextMenu = true;
+});
+
+document.body.addEventListener('click', (e: MouseEvent) => {
+  const { target } = e;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  if (target.offsetParent !== customContextMenu) {
+    customContextMenu.classList.remove('context-menu-visible');
+    setTimeout(() => {
+      showCustomContextMenu = false;
+    });
+  }
+});
 
 function init() {
   renderSchedules();
