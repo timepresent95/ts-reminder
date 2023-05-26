@@ -51,6 +51,12 @@ function createRandomKey(): string {
 
 // 완료된 항목이 뒤로 가도록 정렬
 function compareByIsCompleted(first: ScheduleType, second: ScheduleType) {
+  if(first.title === '') {
+    return 1;
+  }
+  if(second.title === '') {
+    return -1;
+  }
   if (first.isCompleted === second.isCompleted) {
     return 0;
   } else if (first.isCompleted) {
@@ -220,14 +226,22 @@ schedulesEl.addEventListener('click', (e: PointerEvent) => {
   const { key } = scheduleItemEl.dataset;
   if (target.classList.contains('schedule-status')) {
     changeScheduleStatusByKey(key);
+    if(key !== editableItemKey) {
+      editableItemKey = null;
+    }
   } else if (target.classList.contains('schedule-title')) {
     editableItemKey = key;
+    selectedItemKeys = [];
     focusTarget = 'input';
+    e.stopPropagation();
   } else if (target.classList.contains('schedule-notes')) {
     editableItemKey = key;
+    selectedItemKeys = [];
     focusTarget = 'textarea';
+    e.stopPropagation();
   } else {
     selectItem(e, key);
+    editableItemKey = null;
     e.stopPropagation();
   }
   renderSchedules();
@@ -274,13 +288,16 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
 
   const scheduleItemEl = target.closest('.schedule-item');
 
-  if (!(scheduleItemEl instanceof HTMLElement) || scheduleItemEl.dataset.key === 'template') {
+  if (!(scheduleItemEl instanceof HTMLElement)) {
     customContextMenu.classList.remove('context-menu-visible');
     showCustomContextMenu = false;
+    selectedItemKeys = [];
     renderSchedules();
     return;
   }
-
+  if (scheduleItemEl.dataset.key !== editableItemKey) {
+    editableItemKey = null;
+  }
   selectedItemKeys = [scheduleItemEl.dataset.key];
   renderSchedules();
 
