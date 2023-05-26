@@ -3,6 +3,9 @@
 header {
   position: sticky;
   top: 0;
+  left: 0;
+  z-index: 1;
+  background-color: variables.$bg-color;
 
   .add-button {
     font-size: 25px;
