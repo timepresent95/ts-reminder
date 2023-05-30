@@ -87,10 +87,10 @@ function selectItem(e: PointerEvent, key: string) {
     toggleSelectItem(key);
   } else if (e.shiftKey) {
     const selectedKeyIdx = schedules.findIndex((item) => item.key === key);
-    const lastSelectedKeyIdx = schedules.findIndex((item) => item.key === selectedItemKeys[selectedItemKeys.length -1]);
+    const lastSelectedKeyIdx = schedules.findIndex((item) => item.key === selectedItemKeys[selectedItemKeys.length - 1]);
     const s = Math.min(selectedKeyIdx, lastSelectedKeyIdx), e = Math.max(selectedKeyIdx, lastSelectedKeyIdx);
     const newSelectedKey = schedules.slice(s, e + 1).map(v => v.key);
-    if(s === lastSelectedKeyIdx) {
+    if (s === lastSelectedKeyIdx) {
       newSelectedKey.reverse();
     }
     selectedItemKeys.filter(v => !newSelectedKey.includes(v));
@@ -104,11 +104,11 @@ function getContextSelectedBorder(key: string, idx: number): ContextSelectedBord
   if (!contextSelectedItemKeys.includes(key)) {
     return null;
   }
-  const ret: ContextSelectedBorder = {top: false, bottom: false};
-  if(idx === 0 || !contextSelectedItemKeys.includes(schedules[idx - 1].key)) {
+  const ret: ContextSelectedBorder = { top: false, bottom: false };
+  if (idx === 0 || !contextSelectedItemKeys.includes(schedules[idx - 1].key)) {
     ret.top = true;
   }
-  if(idx === schedules.length - 1 || !contextSelectedItemKeys.includes(schedules[idx + 1].key)) {
+  if (idx === schedules.length - 1 || !contextSelectedItemKeys.includes(schedules[idx + 1].key)) {
     ret.bottom = true;
   }
   return ret;
@@ -159,7 +159,7 @@ window.addEventListener('keydown', (e) => {
   let nextCursor: number;
   if (e.code === 'Backspace') {
     schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
-    cancelItemSelect()
+    cancelItemSelect();
     contextSelectedItemKeys = [];
     showCustomContextMenu = false;
     renderSchedules();
@@ -261,13 +261,13 @@ schedulesEl.addEventListener('click', (e: PointerEvent) => {
     }
   } else if (target.classList.contains('schedule-title')) {
     editableItemKey = key;
-    cancelItemSelect()
+    cancelItemSelect();
     contextSelectedItemKeys = [];
     focusTarget = 'input';
     e.stopPropagation();
   } else if (target.classList.contains('schedule-notes')) {
     editableItemKey = key;
-    cancelItemSelect()
+    cancelItemSelect();
     contextSelectedItemKeys = [];
     focusTarget = 'textarea';
     e.stopPropagation();
@@ -284,7 +284,7 @@ document.body.addEventListener('click', (e: MouseEvent) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
-  cancelItemSelect()
+  cancelItemSelect();
   contextSelectedItemKeys = [];
   renderSchedules();
   if (target.offsetParent !== customContextMenu) {
@@ -324,7 +324,7 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   if (!(scheduleItemEl instanceof HTMLElement)) {
     customContextMenu.classList.remove('context-menu-visible');
     showCustomContextMenu = false;
-    cancelItemSelect()
+    cancelItemSelect();
     contextSelectedItemKeys = [];
     renderSchedules();
     return;
@@ -337,7 +337,7 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   if (selectedItemKeys.includes(currentKey)) {
     contextSelectedItemKeys = selectedItemKeys;
   } else {
-    cancelItemSelect()
+    cancelItemSelect();
     contextSelectedItemKeys = [scheduleItemEl.dataset.key];
   }
   renderSchedules();
