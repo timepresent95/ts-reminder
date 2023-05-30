@@ -118,6 +118,24 @@ function cancelItemSelect() {
   selectedItemKeys = [];
 }
 
+function getSelectedAdjacentRangeIdx(key: string): { head: number, tail: number } {
+  const currentKeyIdx = schedules.findIndex((v) => v.key === key);
+  let head = currentKeyIdx, tail = currentKeyIdx;
+  while (head > 0) {
+    if (!selectedItemKeys.includes(schedules[head - 1].key)) {
+      break;
+    }
+    head--;
+  }
+  while (tail < schedules.length - 1) {
+    if (!selectedItemKeys.includes(schedules[tail + 1].key)) {
+      break;
+    }
+    tail++;
+  }
+  return { head, tail };
+}
+
 function renderSchedules() {
   schedules = schedules.filter(({
     title,
@@ -164,16 +182,19 @@ window.addEventListener('keydown', (e) => {
     showCustomContextMenu = false;
     renderSchedules();
     return;
-  } else if (!showCustomContextMenu && e.code === 'ArrowDown') {
-    nextCursor = Math.min(schedules.length - 1, currentCursor + 1);
+  }
+  const { head, tail } = getSelectedAdjacentRangeIdx(lastSelectedItemKey);
+  if (!showCustomContextMenu && e.code === 'ArrowDown') {
+    nextCursor = Math.min(schedules.length - 1, tail + 1);
   } else if (!showCustomContextMenu && e.code === 'ArrowUp') {
-    nextCursor = Math.max(0, currentCursor - 1);
+    nextCursor = Math.max(0, head - 1);
   } else {
     return;
   }
   if (e.shiftKey && currentCursor !== nextCursor) {
-    const duplicatedItemIdx = selectedItemKeys.findIndex((item) => item === schedules[nextCursor].key);
-    duplicatedItemIdx !== -1 && selectedItemKeys.splice(duplicatedItemIdx, 1);
+    if (selectedItemKeys.find((item) => item === schedules[nextCursor].key)) {
+      return;
+    }
     selectedItemKeys.push(schedules[nextCursor].key);
   }
   if (!e.shiftKey) {
