@@ -86,6 +86,15 @@ function selectItem(e: PointerEvent, key: string) {
   if (e.metaKey) {
     toggleSelectItem(key);
   } else if (e.shiftKey) {
+    const selectedKeyIdx = schedules.findIndex((item) => item.key === key);
+    const lastSelectedKeyIdx = schedules.findIndex((item) => item.key === selectedItemKeys[selectedItemKeys.length -1]);
+    const s = Math.min(selectedKeyIdx, lastSelectedKeyIdx), e = Math.max(selectedKeyIdx, lastSelectedKeyIdx);
+    const newSelectedKey = schedules.slice(s, e + 1).map(v => v.key);
+    if(s === lastSelectedKeyIdx) {
+      newSelectedKey.reverse();
+    }
+    selectedItemKeys.filter(v => !newSelectedKey.includes(v));
+    selectedItemKeys.push(...newSelectedKey);
   } else {
     selectedItemKeys = [key];
   }
