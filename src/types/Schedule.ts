@@ -11,3 +11,8 @@ export default class Schedule {
         this.isCompleted = false;
     }
 }
+
+export interface ContextSelectedBorder {
+    top: boolean;
+    bottom: boolean;
+}

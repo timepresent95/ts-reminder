@@ -25,6 +25,34 @@
     background-color: variables.$g4;
   }
 
+  &.context-selected {
+    border-left: 3px solid variables.$w1;
+    border-right: 3px solid variables.$w1;
+
+    &-border-top {
+      border-top: 3px solid variables.$w1;
+    }
+
+    &-border-bottom {
+      border-bottom: 3px solid variables.$w1;
+    }
+  }
+
+  &.selected.context-selected {
+    border-left: 3px solid variables.$b1;
+    border-right: 3px solid variables.$b1;
+
+    &-border-top {
+      border-top: 3px solid variables.$b1;
+    }
+
+    &-border-bottom {
+      border-bottom: 3px solid variables.$b1;
+    }
+  }
+
+
+
   .schedule-content {
     width: 100%;
     padding: 6px 20px 8px 0;

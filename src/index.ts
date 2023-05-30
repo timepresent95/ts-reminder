@@ -1,6 +1,6 @@
 import './assets/style/style.scss';
 
-import ScheduleType from './types/Schedule';
+import ScheduleType, { ContextSelectedBorder } from './types/Schedule';
 
 import Schedule from './components/Schedule';
 
@@ -8,6 +8,7 @@ let schedules: ScheduleType[] = [];
 
 let showCustomContextMenu = false;
 let selectedItemKeys: string[] = [];
+let contextSelectedItemKeys: string[] = [];
 let editableItemKey: string | null = null;
 let focusTarget: string | null = null;
 
@@ -51,10 +52,10 @@ function createRandomKey(): string {
 
 // 완료된 항목이 뒤로 가도록 정렬
 function compareByIsCompleted(first: ScheduleType, second: ScheduleType) {
-  if(first.title === '') {
+  if (first.title === '') {
     return 1;
   }
-  if(second.title === '') {
+  if (second.title === '') {
     return -1;
   }
   if (first.isCompleted === second.isCompleted) {
@@ -90,6 +91,20 @@ function selectItem(e: PointerEvent, key: string) {
   }
 }
 
+function getContextSelectedBorder(key: string, idx: number): ContextSelectedBorder | null {
+  if (!contextSelectedItemKeys.includes(key)) {
+    return null;
+  }
+  const ret: ContextSelectedBorder = {top: false, bottom: false};
+  if(idx === 0 || !contextSelectedItemKeys.includes(schedules[idx - 1].key)) {
+    ret.top = true;
+  }
+  if(idx === schedules.length - 1 || !contextSelectedItemKeys.includes(schedules[idx + 1].key)) {
+    ret.bottom = true;
+  }
+  return ret;
+}
+
 function renderSchedules() {
   schedules = schedules.filter(({
     title,
@@ -101,7 +116,7 @@ function renderSchedules() {
     allCompletedEl.classList.add('d-none');
   }
   schedulesEl.innerHTML = schedules
-    .map((item) => Schedule(item, selectedItemKeys.includes(item.key), editableItemKey === item.key))
+    .map((item, idx) => Schedule(item, selectedItemKeys.includes(item.key), editableItemKey === item.key, getContextSelectedBorder(item.key, idx)))
     .join('');
   if (editableItemKey === null || focusTarget === null) {
     return;
@@ -132,11 +147,13 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Backspace') {
     schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
     selectedItemKeys = [];
+    contextSelectedItemKeys = [];
+    showCustomContextMenu = false;
     renderSchedules();
     return;
-  } else if (e.code === 'ArrowDown') {
+  } else if (!showCustomContextMenu && e.code === 'ArrowDown') {
     nextCursor = Math.min(schedules.length - 1, currentCursor + 1);
-  } else if (e.code === 'ArrowUp') {
+  } else if (!showCustomContextMenu && e.code === 'ArrowUp') {
     nextCursor = Math.max(0, currentCursor - 1);
   } else {
     return;
@@ -226,17 +243,19 @@ schedulesEl.addEventListener('click', (e: PointerEvent) => {
   const { key } = scheduleItemEl.dataset;
   if (target.classList.contains('schedule-status')) {
     changeScheduleStatusByKey(key);
-    if(key !== editableItemKey) {
+    if (key !== editableItemKey) {
       editableItemKey = null;
     }
   } else if (target.classList.contains('schedule-title')) {
     editableItemKey = key;
     selectedItemKeys = [];
+    contextSelectedItemKeys = [];
     focusTarget = 'input';
     e.stopPropagation();
   } else if (target.classList.contains('schedule-notes')) {
     editableItemKey = key;
     selectedItemKeys = [];
+    contextSelectedItemKeys = [];
     focusTarget = 'textarea';
     e.stopPropagation();
   } else {
@@ -253,6 +272,7 @@ document.body.addEventListener('click', (e: MouseEvent) => {
     return;
   }
   selectedItemKeys = [];
+  contextSelectedItemKeys = [];
   renderSchedules();
   if (target.offsetParent !== customContextMenu) {
     customContextMenu.classList.remove('context-menu-visible');
@@ -292,13 +312,21 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
     customContextMenu.classList.remove('context-menu-visible');
     showCustomContextMenu = false;
     selectedItemKeys = [];
+    contextSelectedItemKeys = [];
     renderSchedules();
     return;
   }
-  if (scheduleItemEl.dataset.key !== editableItemKey) {
+  const currentKey = scheduleItemEl.dataset.key;
+  if (currentKey !== editableItemKey) {
     editableItemKey = null;
   }
-  selectedItemKeys = [scheduleItemEl.dataset.key];
+
+  if (selectedItemKeys.includes(currentKey)) {
+    contextSelectedItemKeys = selectedItemKeys;
+  } else {
+    selectedItemKeys = [];
+    contextSelectedItemKeys = [scheduleItemEl.dataset.key];
+  }
   renderSchedules();
 
   const { clientX, clientY } = e;
