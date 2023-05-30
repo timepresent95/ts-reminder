@@ -105,6 +105,10 @@ function getContextSelectedBorder(key: string, idx: number): ContextSelectedBord
   return ret;
 }
 
+function cancelItemSelect() {
+  selectedItemKeys = [];
+}
+
 function renderSchedules() {
   schedules = schedules.filter(({
     title,
@@ -146,7 +150,7 @@ window.addEventListener('keydown', (e) => {
   let nextCursor: number;
   if (e.code === 'Backspace') {
     schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
-    selectedItemKeys = [];
+    cancelItemSelect()
     contextSelectedItemKeys = [];
     showCustomContextMenu = false;
     renderSchedules();
@@ -248,13 +252,13 @@ schedulesEl.addEventListener('click', (e: PointerEvent) => {
     }
   } else if (target.classList.contains('schedule-title')) {
     editableItemKey = key;
-    selectedItemKeys = [];
+    cancelItemSelect()
     contextSelectedItemKeys = [];
     focusTarget = 'input';
     e.stopPropagation();
   } else if (target.classList.contains('schedule-notes')) {
     editableItemKey = key;
-    selectedItemKeys = [];
+    cancelItemSelect()
     contextSelectedItemKeys = [];
     focusTarget = 'textarea';
     e.stopPropagation();
@@ -271,7 +275,7 @@ document.body.addEventListener('click', (e: MouseEvent) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
-  selectedItemKeys = [];
+  cancelItemSelect()
   contextSelectedItemKeys = [];
   renderSchedules();
   if (target.offsetParent !== customContextMenu) {
@@ -311,7 +315,7 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   if (!(scheduleItemEl instanceof HTMLElement)) {
     customContextMenu.classList.remove('context-menu-visible');
     showCustomContextMenu = false;
-    selectedItemKeys = [];
+    cancelItemSelect()
     contextSelectedItemKeys = [];
     renderSchedules();
     return;
@@ -324,7 +328,7 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   if (selectedItemKeys.includes(currentKey)) {
     contextSelectedItemKeys = selectedItemKeys;
   } else {
-    selectedItemKeys = [];
+    cancelItemSelect()
     contextSelectedItemKeys = [scheduleItemEl.dataset.key];
   }
   renderSchedules();
