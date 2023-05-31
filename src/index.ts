@@ -156,13 +156,16 @@ function removeDragBorderClass(target: HTMLElement) {
 }
 
 function eventScheduleItemMouseMove(e: PointerEvent) {
+  if (e.button !== 0) {
+    return;
+  }
   const { currentTarget } = e;
 
   if (!(currentTarget instanceof HTMLElement)) {
     return;
   }
   removeDragBorderClass(currentTarget);
-  if(currentTarget.offsetHeight / 2 > e.offsetY) {
+  if (currentTarget.offsetHeight / 2 > e.offsetY) {
     currentTarget.classList.add('dragenter-border-front');
   } else {
     currentTarget.classList.add('dragenter-border-back');
@@ -170,6 +173,9 @@ function eventScheduleItemMouseMove(e: PointerEvent) {
 }
 
 function eventScheduleItemMouseLeave(e: PointerEvent) {
+  if (e.button !== 0) {
+    return;
+  }
   const { currentTarget } = e;
 
   if (!(currentTarget instanceof HTMLElement)) {
@@ -177,7 +183,7 @@ function eventScheduleItemMouseLeave(e: PointerEvent) {
   }
   currentTarget.removeEventListener('mousemove', eventScheduleItemMouseMove);
   currentTarget.removeEventListener('mouseleave', eventScheduleItemMouseLeave);
-  removeDragBorderClass(currentTarget)
+  removeDragBorderClass(currentTarget);
 }
 
 function insertItem(sourceKey: string, targetKey: string, position: 'front' | 'back') {
@@ -289,6 +295,9 @@ schedulesEl.addEventListener('input', (e) => {
 });
 
 today.addEventListener('mouseup', (e) => {
+  if (e.button !== 0) {
+    return;
+  }
   const { target } = e;
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
     return;
@@ -307,7 +316,10 @@ today.addEventListener('mouseup', (e) => {
   renderSchedules();
 });
 
-addButton.addEventListener('mouseup', () => {
+addButton.addEventListener('mouseup', (e: MouseEvent) => {
+  if (e.button !== 0) {
+    return;
+  }
   if (showCustomContextMenu) {
     return;
   }
@@ -318,6 +330,9 @@ addButton.addEventListener('mouseup', () => {
 });
 
 schedulesEl.addEventListener('mousedown', (e: PointerEvent) => {
+  if (e.button !== 0) {
+    return;
+  }
   const { target } = e;
 
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
@@ -333,6 +348,9 @@ schedulesEl.addEventListener('mousedown', (e: PointerEvent) => {
 });
 
 schedulesEl.addEventListener('mousemove', (e: PointerEvent) => {
+  if (e.button !== 0) {
+    return;
+  }
   if (mousedownTargetKey === null) {
     return;
   }
@@ -358,6 +376,9 @@ schedulesEl.addEventListener('mousemove', (e: PointerEvent) => {
 });
 
 schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
+  if (e.button !== 0) {
+    return;
+  }
   const { target } = e;
 
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
@@ -402,6 +423,9 @@ schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
 });
 
 document.body.addEventListener('mouseup', (e: MouseEvent) => {
+  if (e.button !== 0) {
+    return;
+  }
   mousedownTargetKey = null;
   const { target } = e;
   if (!(target instanceof HTMLElement)) {
@@ -419,6 +443,9 @@ document.body.addEventListener('mouseup', (e: MouseEvent) => {
 });
 
 customContextMenu.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) {
+    return;
+  }
   const { target } = e;
   if (!(target instanceof HTMLElement)) {
     return;
