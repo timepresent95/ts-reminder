@@ -34,23 +34,18 @@ function getDistance(pointA: Position, pointB: Position): number {
 
 //FIXME: 표시할 수 없는 상태가 되면 상하좌우를 유연하게 변경하도록 해야 함.
 function normalizePosition(mouseX: number, mouseY: number) {
-  const { left: scopeOffsetX, top: scopeOffsetY } = document.body.getBoundingClientRect();
-
-  const scopeX = mouseX - scopeOffsetX;
-  const scopeY = mouseY - scopeOffsetY;
-
-  const outOfBoundsOnX = scopeX + customContextMenu.clientWidth > document.body.clientWidth;
-  const outOfBoundsOnY = scopeY + customContextMenu.clientHeight > document.body.clientHeight;
+  const outOfBoundsOnX = mouseX + customContextMenu.clientWidth > document.body.clientWidth;
+  const outOfBoundsOnY = mouseY + customContextMenu.clientHeight > document.body.clientHeight;
 
   let normalizedX = mouseX;
   let normalizedY = mouseY;
 
   if (outOfBoundsOnX) {
-    normalizedX = scopeOffsetX + document.body.clientWidth - customContextMenu.clientWidth;
+    normalizedX = document.body.clientWidth - customContextMenu.clientWidth;
   }
 
   if (outOfBoundsOnY) {
-    normalizedY = scopeOffsetY + document.body.clientHeight - customContextMenu.clientHeight;
+    normalizedY = document.body.clientHeight - customContextMenu.clientHeight;
   }
 
   return { normalizedX, normalizedY };
