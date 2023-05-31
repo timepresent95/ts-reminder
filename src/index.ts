@@ -6,17 +6,31 @@ import Schedule from './components/Schedule';
 
 let schedules: ScheduleType[] = [];
 
+interface Position {
+  x: number,
+  y: number
+}
+
+const DRAG_SENSITIVITY = 10;
+
 let showCustomContextMenu = false;
 let selectedItemKeys: string[] = [];
 let contextSelectedItemKeys: string[] = [];
 let editableItemKey: string | null = null;
 let focusTarget: string | null = null;
+let mousedownTargetKey: string | null = null;
+let initMousePosition: Position | null = null;
+let activeDrag = false;
 
 const today = document.body.querySelector('main');
 const allCompletedEl = document.querySelector('.all-completed');
 const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
 const customContextMenu = document.getElementById('context-menu');
+
+function getDistance(pointA: Position, pointB: Position): number {
+  return Math.pow(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2), 0.5);
+}
 
 //FIXME: 표시할 수 없는 상태가 되면 상하좌우를 유연하게 변경하도록 해야 함.
 function normalizePosition(mouseX: number, mouseY: number) {
@@ -136,6 +150,47 @@ function getSelectedAdjacentRangeIdx(key: string): { head: number, tail: number 
   return { head, tail };
 }
 
+function removeDragBorderClass(target: HTMLElement) {
+  target.classList.remove('dragenter-border-front');
+  target.classList.remove('dragenter-border-back');
+}
+
+function eventScheduleItemMouseMove(e: PointerEvent) {
+  const { currentTarget } = e;
+
+  if (!(currentTarget instanceof HTMLElement)) {
+    return;
+  }
+  removeDragBorderClass(currentTarget);
+  if(currentTarget.offsetHeight / 2 > e.offsetY) {
+    currentTarget.classList.add('dragenter-border-front');
+  } else {
+    currentTarget.classList.add('dragenter-border-back');
+  }
+}
+
+function eventScheduleItemMouseLeave(e: PointerEvent) {
+  const { currentTarget } = e;
+
+  if (!(currentTarget instanceof HTMLElement)) {
+    return;
+  }
+  currentTarget.removeEventListener('mousemove', eventScheduleItemMouseMove);
+  currentTarget.removeEventListener('mouseleave', eventScheduleItemMouseLeave);
+  removeDragBorderClass(currentTarget)
+}
+
+function insertItem(sourceKey: string, targetKey: string, position: 'front' | 'back') {
+  const sourceIdx = schedules.findIndex((item) => item.key === sourceKey);
+  const source = schedules[sourceIdx];
+  schedules.splice(sourceIdx, 1);
+  let targetIdx = schedules.findIndex((item) => item.key === targetKey);
+  if (position === 'back') {
+    targetIdx++;
+  }
+  schedules.splice(targetIdx, 0, source);
+}
+
 function renderSchedules() {
   schedules = schedules.filter(({
     title,
@@ -233,7 +288,7 @@ schedulesEl.addEventListener('input', (e) => {
   }
 });
 
-today.addEventListener('click', (e) => {
+today.addEventListener('mouseup', (e) => {
   const { target } = e;
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
     return;
@@ -252,7 +307,7 @@ today.addEventListener('click', (e) => {
   renderSchedules();
 });
 
-addButton.addEventListener('click', () => {
+addButton.addEventListener('mouseup', () => {
   if (showCustomContextMenu) {
     return;
   }
@@ -262,7 +317,47 @@ addButton.addEventListener('click', () => {
   renderSchedules();
 });
 
-schedulesEl.addEventListener('click', (e: PointerEvent) => {
+schedulesEl.addEventListener('mousedown', (e: PointerEvent) => {
+  const { target } = e;
+
+  if (!(target instanceof HTMLElement) || showCustomContextMenu) {
+    return;
+  }
+
+  const scheduleItemEl = target.closest('.schedule-item');
+  if (!(scheduleItemEl instanceof HTMLElement)) {
+    return;
+  }
+  mousedownTargetKey = scheduleItemEl.dataset.key;
+  initMousePosition = { x: e.clientX, y: e.clientY };
+});
+
+schedulesEl.addEventListener('mousemove', (e: PointerEvent) => {
+  if (mousedownTargetKey === null) {
+    return;
+  }
+  const { target } = e;
+
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const scheduleItemEl = target.closest('.schedule-item');
+  if (!(scheduleItemEl instanceof HTMLElement)) {
+    return;
+  }
+  if (activeDrag) {
+    scheduleItemEl.addEventListener('mousemove', eventScheduleItemMouseMove);
+    scheduleItemEl.addEventListener('mouseleave', eventScheduleItemMouseLeave);
+    return;
+  }
+  const currentMousePosition: Position = { x: e.clientX, y: e.clientY };
+  if (getDistance(initMousePosition, currentMousePosition) > DRAG_SENSITIVITY) {
+    activeDrag = true;
+  }
+});
+
+schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
   const { target } = e;
 
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
@@ -292,15 +387,22 @@ schedulesEl.addEventListener('click', (e: PointerEvent) => {
     contextSelectedItemKeys = [];
     focusTarget = 'textarea';
     e.stopPropagation();
+  } else if (activeDrag) {
+    const position = scheduleItemEl.classList.contains('dragenter-border-back') ? 'back' : 'front';
+    insertItem(mousedownTargetKey, key, position);
   } else {
     selectItem(e, key);
     editableItemKey = null;
     e.stopPropagation();
   }
+  mousedownTargetKey = null;
+  activeDrag = false;
+  removeDragBorderClass(scheduleItemEl);
   renderSchedules();
 });
 
-document.body.addEventListener('click', (e: MouseEvent) => {
+document.body.addEventListener('mouseup', (e: MouseEvent) => {
+  mousedownTargetKey = null;
   const { target } = e;
   if (!(target instanceof HTMLElement)) {
     return;
@@ -316,7 +418,7 @@ document.body.addEventListener('click', (e: MouseEvent) => {
   }
 });
 
-customContextMenu.addEventListener('click', (e) => {
+customContextMenu.addEventListener('mousedown', (e) => {
   const { target } = e;
   if (!(target instanceof HTMLElement)) {
     return;

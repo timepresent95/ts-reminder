@@ -3,7 +3,8 @@
 .schedule-item {
   display: flex;
   align-items: flex-start;
-  padding-left: 20px;
+  margin-left: 10px;
+  position: relative;
 
   &.editable {
     width: 100%;
@@ -13,11 +14,49 @@
       display: block;
       border: none;
       background-color: transparent;
+      width: 70%;
     }
 
     textarea {
       resize: none;
       overflow-y: hidden;
+    }
+
+  }
+
+  &.dragenter-border-front {
+    border-top: 2px solid variables.$b1;
+
+    &:before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid variables.$b1;
+      border-radius: 50%;
+      background-color: variables.$bg-color;
+      transform: translate(0, -6px);
+      z-index: 10;
+    }
+  }
+
+  &.dragenter-border-back {
+    border-bottom: 2px solid variables.$b1;
+
+    &:before {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid variables.$b1;
+      border-radius: 50%;
+      background-color: variables.$bg-color;
+      transform: translate(0, 6px);
+      z-index: 10;
     }
   }
 
@@ -52,10 +91,9 @@
   }
 
 
-
   .schedule-content {
     width: 100%;
-    padding: 6px 20px 8px 0;
+    padding: 8px 20px 8px 0;
     margin-left: 16px;
     border-bottom: solid 1px variables.$g4;
   }
@@ -73,7 +111,7 @@
   border: solid 1px variables.$g3;
   border-radius: 50%;
   position: relative;
-  margin: 6px 0 8px 0;
+  margin: 8px 0 8px 10px;
 
 
   &-complete {
