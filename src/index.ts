@@ -32,7 +32,6 @@ function getDistance(pointA: Position, pointB: Position): number {
   return Math.pow(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2), 0.5);
 }
 
-//FIXME: 표시할 수 없는 상태가 되면 상하좌우를 유연하게 변경하도록 해야 함.
 function normalizePosition(mouseX: number, mouseY: number) {
   const outOfBoundsOnX = mouseX + customContextMenu.clientWidth > document.body.clientWidth;
   const outOfBoundsOnY = mouseY + customContextMenu.clientHeight > document.body.clientHeight;
@@ -40,12 +39,13 @@ function normalizePosition(mouseX: number, mouseY: number) {
   let normalizedX = mouseX;
   let normalizedY = mouseY;
 
-  if (outOfBoundsOnX) {
-    normalizedX = document.body.clientWidth - customContextMenu.clientWidth;
-  }
-
-  if (outOfBoundsOnY) {
-    normalizedY = document.body.clientHeight - customContextMenu.clientHeight;
+  if (outOfBoundsOnX && outOfBoundsOnY) {
+    normalizedX = mouseX - customContextMenu.clientWidth;
+    normalizedY = mouseY - customContextMenu.clientHeight;
+  } else if (outOfBoundsOnX) {
+    normalizedX = mouseX - customContextMenu.clientWidth;
+  } else if (outOfBoundsOnY) {
+    normalizedY = mouseY - customContextMenu.clientHeight;
   }
 
   return { normalizedX, normalizedY };
@@ -488,10 +488,10 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   renderSchedules();
 
   const { clientX, clientY } = e;
+  customContextMenu.classList.add('context-menu-visible');
   const { normalizedX, normalizedY } = normalizePosition(clientX, clientY);
   customContextMenu.style.left = normalizedX + 'px';
   customContextMenu.style.top = normalizedY + 'px';
-  customContextMenu.classList.add('context-menu-visible');
   showCustomContextMenu = true;
 });
 
