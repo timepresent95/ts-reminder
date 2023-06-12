@@ -1,5 +1,5 @@
-import { createNewSchedule } from "../src/utility/schedule";
-import ScheduleType from "../src/model/Schedule";
+import { createNewSchedule } from "../schedule";
+import ScheduleType from "../../model/Schedule";
 
 let schedules: ScheduleType[] = [];
 
