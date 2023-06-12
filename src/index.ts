@@ -3,7 +3,7 @@ import './assets/style/style.scss';
 import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
 
 import Schedule from './components/Schedule';
-import {createNewSchedule} from "./utility/schedule"
+import { toggleScheduleCompleted, createNewSchedule } from "./utility/schedule";
 
 let schedules: ScheduleType[] = [];
 
@@ -75,7 +75,7 @@ function compareByIsCompleted(first: ScheduleType, second: ScheduleType) {
 
 function changeScheduleStatusByKey(key: string) {
   const targetSchedule = findScheduleByKey(key);
-  targetSchedule.isCompleted = !targetSchedule.isCompleted;
+  toggleScheduleCompleted(targetSchedule)
   return;
 }
 
