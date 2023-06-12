@@ -3,6 +3,7 @@ import './assets/style/style.scss';
 import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
 
 import Schedule from './components/Schedule';
+import {createNewSchedule} from "./utility/schedule"
 
 let schedules: ScheduleType[] = [];
 
@@ -27,12 +28,6 @@ const allCompletedEl = document.querySelector('.all-completed');
 const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
 const customContextMenu = document.getElementById('context-menu');
-
-function appendEmptySchedule(): ScheduleType {
-  const emptySchedule = new ScheduleType('', '', createRandomKey());
-  schedules.push(emptySchedule);
-  return emptySchedule;
-}
 
 function getDistance(pointA: Position, pointB: Position): number {
   return Math.pow(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2), 0.5);
@@ -59,10 +54,6 @@ function normalizePosition(mouseX: number, mouseY: number) {
 
 function findScheduleByKey(key: string) {
   return schedules.find((schedule) => schedule.key === key) ?? null;
-}
-
-function createRandomKey(): string {
-  return (Math.random() + 1).toString(36).substring(7);
 }
 
 // 완료된 항목이 뒤로 가도록 정렬
@@ -276,7 +267,7 @@ schedulesEl.addEventListener('keydown', (e: KeyboardEvent) => {
     renderSchedules();
     return;
   }
-  const emptySchedule = appendEmptySchedule()
+  const emptySchedule = createNewSchedule(schedules)
   editableItemKey = emptySchedule.key;
   focusTarget = 'input';
   renderSchedules();
@@ -308,7 +299,7 @@ today.addEventListener('mouseup', (e) => {
   if (findScheduleByKey(editableItemKey) !== null) {
     editableItemKey = null;
   } else {
-    const emptySchedule = appendEmptySchedule();
+    const emptySchedule = createNewSchedule(schedules);
     editableItemKey = emptySchedule.key;
     focusTarget = 'input';
   }
@@ -322,7 +313,7 @@ addButton.addEventListener('mouseup', (e: MouseEvent) => {
   if (showCustomContextMenu) {
     return;
   }
-  const emptySchedule = appendEmptySchedule()
+  const emptySchedule = createNewSchedule(schedules)
   editableItemKey = emptySchedule.key;
   renderSchedules();
 });
