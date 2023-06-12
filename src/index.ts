@@ -28,6 +28,12 @@ const addButton = document.querySelector('.add-button');
 const schedulesEl = document.querySelector('.schedules');
 const customContextMenu = document.getElementById('context-menu');
 
+function appendEmptySchedule(): ScheduleType {
+  const emptySchedule = new ScheduleType('', '', createRandomKey());
+  schedules.push(emptySchedule);
+  return emptySchedule;
+}
+
 function getDistance(pointA: Position, pointB: Position): number {
   return Math.pow(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2), 0.5);
 }
@@ -270,8 +276,7 @@ schedulesEl.addEventListener('keydown', (e: KeyboardEvent) => {
     renderSchedules();
     return;
   }
-  const emptySchedule = new ScheduleType('', '', createRandomKey());
-  schedules.push(emptySchedule);
+  const emptySchedule = appendEmptySchedule()
   editableItemKey = emptySchedule.key;
   focusTarget = 'input';
   renderSchedules();
@@ -303,8 +308,7 @@ today.addEventListener('mouseup', (e) => {
   if (findScheduleByKey(editableItemKey) !== null) {
     editableItemKey = null;
   } else {
-    const emptySchedule = new ScheduleType('', '', createRandomKey());
-    schedules.push(emptySchedule);
+    const emptySchedule = appendEmptySchedule();
     editableItemKey = emptySchedule.key;
     focusTarget = 'input';
   }
@@ -318,8 +322,7 @@ addButton.addEventListener('mouseup', (e: MouseEvent) => {
   if (showCustomContextMenu) {
     return;
   }
-  const emptySchedule = new ScheduleType('', '', createRandomKey());
-  schedules.push(emptySchedule);
+  const emptySchedule = appendEmptySchedule()
   editableItemKey = emptySchedule.key;
   renderSchedules();
 });
