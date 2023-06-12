@@ -4,11 +4,12 @@ export default class Schedule {
     isCompleted: boolean;
     key: string;
 
-    constructor(title: string, notes: string, key: string) {
+    constructor(title: string, notes: string, key: string);
+    constructor(title: string, notes: string, key: string, isCompleted?: boolean) {
         this.title = title;
         this.notes = notes;
         this.key = key;
-        this.isCompleted = false;
+        this.isCompleted = isCompleted ?? false;
     }
 }
 
