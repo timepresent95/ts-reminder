@@ -5,6 +5,7 @@ export default class Schedule {
     key: string;
 
     constructor(title: string, notes: string, key: string);
+    constructor(title: string, notes: string, key: string, isCompleted: boolean);
     constructor(title: string, notes: string, key: string, isCompleted?: boolean) {
         this.title = title;
         this.notes = notes;
