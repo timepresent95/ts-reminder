@@ -3,7 +3,7 @@ import './assets/style/style.scss';
 import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
 
 import Schedule from './components/Schedule';
-import { toggleScheduleCompleted, createNewSchedule } from "./utility/schedule";
+import { toggleScheduleCompleted, createNewSchedule, filterSelectedSchedules } from "./utility/schedule";
 
 let schedules: ScheduleType[] = [];
 
@@ -229,7 +229,7 @@ window.addEventListener('keydown', (e) => {
   let currentCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
   let nextCursor: number;
   if (e.code === 'Backspace') {
-    schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
+    schedules = filterSelectedSchedules(schedules, selectedItemKeys);
     cancelItemSelect();
     contextSelectedItemKeys = [];
     showCustomContextMenu = false;
@@ -440,7 +440,7 @@ customContextMenu.addEventListener('mousedown', (e) => {
     return;
   }
   if (target.dataset.function === 'delete') {
-    schedules = schedules.filter(({ key }) => !selectedItemKeys.includes(key));
+    schedules = filterSelectedSchedules(schedules, selectedItemKeys);
     renderSchedules();
   }
   customContextMenu.classList.remove('context-menu-visible');

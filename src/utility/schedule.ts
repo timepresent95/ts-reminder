@@ -1,7 +1,7 @@
 import Schedule from "../model/Schedule";
 
 
-function createRandomKey(): string {
+export function createRandomKey(): string {
   return (Math.random() + 1).toString(36).substring(7) + Date.now();
 }
 
@@ -13,4 +13,8 @@ export function createNewSchedule(schedules: Schedule[]): Schedule {
 
 export function toggleScheduleCompleted(targetSchedule: Schedule) {
   targetSchedule.isCompleted = !targetSchedule.isCompleted;
+}
+
+export function filterSelectedSchedules(schedules: Schedule[], selectedScheduleKeys: string[]) {
+  return schedules.filter(({ key }) => !selectedScheduleKeys.includes(key));
 }
