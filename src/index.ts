@@ -1,6 +1,6 @@
 import './assets/style/style.scss';
 
-import ScheduleType, { ContextSelectedBorder } from './types/Schedule';
+import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
 
 import Schedule from './components/Schedule';
 

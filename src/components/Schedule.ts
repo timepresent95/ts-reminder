@@ -1,4 +1,4 @@
-import ScheduleType, {ContextSelectedBorder} from '../types/Schedule';
+import ScheduleType, {ContextSelectedBorder} from '../model/Schedule';
 
 function getContextSelectedBorderClass(contextSelectedBorder: ContextSelectedBorder | null) {
   let ret = 'context-selected';
