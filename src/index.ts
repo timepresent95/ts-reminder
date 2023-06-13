@@ -267,8 +267,7 @@ schedulesEl.addEventListener('keydown', (e: KeyboardEvent) => {
     renderSchedules();
     return;
   }
-  const emptySchedule = createNewSchedule(schedules)
-  editableItemKey = emptySchedule.key;
+  editableItemKey = createNewSchedule(schedules).key;
   focusTarget = 'input';
   renderSchedules();
 });
@@ -299,8 +298,7 @@ today.addEventListener('mouseup', (e) => {
   if (findScheduleByKey(editableItemKey) !== null) {
     editableItemKey = null;
   } else {
-    const emptySchedule = createNewSchedule(schedules);
-    editableItemKey = emptySchedule.key;
+    editableItemKey = createNewSchedule(schedules).key;
     focusTarget = 'input';
   }
   renderSchedules();
@@ -313,8 +311,7 @@ addButton.addEventListener('mouseup', (e: MouseEvent) => {
   if (showCustomContextMenu) {
     return;
   }
-  const emptySchedule = createNewSchedule(schedules)
-  editableItemKey = emptySchedule.key;
+  editableItemKey = createNewSchedule(schedules).key;
   renderSchedules();
 });
 
