@@ -1,15 +1,12 @@
-import './assets/style/style.scss';
+import "./assets/style/style.scss";
 
-import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
+import ScheduleType, { ContextSelectedBorder } from "./model/Schedule";
 
-import { toggleScheduleCompleted, createNewSchedule, filterSelectedSchedules } from "./utility/schedule";
+import { createNewSchedule, filterSelectedSchedules } from "./utility/schedule";
+import Mouse from "./utility/Mouse";
+import Position from "./utility/Position";
 
 let schedules: ScheduleType[] = [];
-
-interface Position {
-  x: number,
-  y: number
-}
 
 const DRAG_SENSITIVITY = 10;
 
@@ -19,18 +16,14 @@ let contextSelectedItemKeys: string[] = [];
 let editableItemKey: string | null = null;
 let focusTarget: string | null = null;
 let mousedownTargetKey: string | null = null;
-let initMousePosition: Position | null = null;
+const mouse = new Mouse(DRAG_SENSITIVITY);
 let activeDrag = false;
 
-const today = document.body.querySelector('main');
-const allCompletedEl = document.querySelector('.all-completed');
-const addButton = document.querySelector('.add-button');
-const schedulesEl = document.querySelector('.schedules');
-const customContextMenu = document.getElementById('context-menu');
-
-function getDistance(pointA: Position, pointB: Position): number {
-  return Math.pow(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2), 0.5);
-}
+const today = document.body.querySelector("main");
+const allCompletedEl = document.querySelector(".all-completed");
+const addButton = document.querySelector(".add-button");
+const schedulesEl = document.querySelector(".schedules");
+const customContextMenu = document.getElementById("context-menu");
 
 function normalizePosition(mouseX: number, mouseY: number) {
   const outOfBoundsOnX = mouseX + customContextMenu.clientWidth > document.body.clientWidth;
@@ -57,10 +50,10 @@ function findScheduleByKey(key: string) {
 
 // 완료된 항목이 뒤로 가도록 정렬
 function compareByIsCompleted(first: ScheduleType, second: ScheduleType) {
-  if (first.title === '') {
+  if (first.title === "") {
     return 1;
   }
-  if (second.title === '') {
+  if (second.title === "") {
     return -1;
   }
   if (first.isCompleted === second.isCompleted) {
@@ -141,8 +134,8 @@ function getSelectedAdjacentRangeIdx(key: string): { head: number, tail: number 
 }
 
 function removeDragBorderClass(target: HTMLElement) {
-  target.classList.remove('dragenter-border-front');
-  target.classList.remove('dragenter-border-back');
+  target.classList.remove("dragenter-border-front");
+  target.classList.remove("dragenter-border-back");
 }
 
 function eventScheduleItemMouseMove(e: PointerEvent) {
@@ -156,9 +149,9 @@ function eventScheduleItemMouseMove(e: PointerEvent) {
   }
   removeDragBorderClass(currentTarget);
   if (currentTarget.offsetHeight / 2 > e.offsetY) {
-    currentTarget.classList.add('dragenter-border-front');
+    currentTarget.classList.add("dragenter-border-front");
   } else {
-    currentTarget.classList.add('dragenter-border-back');
+    currentTarget.classList.add("dragenter-border-back");
   }
 }
 
@@ -171,17 +164,17 @@ function eventScheduleItemMouseLeave(e: PointerEvent) {
   if (!(currentTarget instanceof HTMLElement)) {
     return;
   }
-  currentTarget.removeEventListener('mousemove', eventScheduleItemMouseMove);
-  currentTarget.removeEventListener('mouseleave', eventScheduleItemMouseLeave);
+  currentTarget.removeEventListener("mousemove", eventScheduleItemMouseMove);
+  currentTarget.removeEventListener("mouseleave", eventScheduleItemMouseLeave);
   removeDragBorderClass(currentTarget);
 }
 
-function insertItem(sourceKey: string, targetKey: string, position: 'front' | 'back') {
+function insertItem(sourceKey: string, targetKey: string, position: "front" | "back") {
   const sourceIdx = schedules.findIndex((item) => item.key === sourceKey);
   const source = schedules[sourceIdx];
   schedules.splice(sourceIdx, 1);
   let targetIdx = schedules.findIndex((item) => item.key === targetKey);
-  if (position === 'back') {
+  if (position === "back") {
     targetIdx++;
   }
   schedules.splice(targetIdx, 0, source);
@@ -190,16 +183,16 @@ function insertItem(sourceKey: string, targetKey: string, position: 'front' | 'b
 function renderSchedules() {
   schedules = schedules.filter(({
     title,
-    key,
-  }) => editableItemKey === key || title.trim() !== '').sort(compareByIsCompleted);
+    key
+  }) => editableItemKey === key || title.trim() !== "").sort(compareByIsCompleted);
   if (schedules.length === 0) {
-    allCompletedEl.classList.remove('d-none');
+    allCompletedEl.classList.remove("d-none");
   } else {
-    allCompletedEl.classList.add('d-none');
+    allCompletedEl.classList.add("d-none");
   }
   schedulesEl.innerHTML = schedules
     .map((item, idx) => item.render(selectedItemKeys.includes(item.key), editableItemKey === item.key, getContextSelectedBorder(item.key, idx)))
-    .join('');
+    .join("");
   if (editableItemKey === null || focusTarget === null) {
     return;
   }
@@ -219,14 +212,14 @@ function renderSchedules() {
   }
 }
 
-window.addEventListener('keydown', (e) => {
+window.addEventListener("keydown", (e) => {
   if (selectedItemKeys.length === 0) {
     return;
   }
   const lastSelectedItemKey = selectedItemKeys[selectedItemKeys.length - 1];
   let currentCursor = schedules.findIndex(({ key }) => key === lastSelectedItemKey);
   let nextCursor: number;
-  if (e.code === 'Backspace') {
+  if (e.code === "Backspace") {
     schedules = filterSelectedSchedules(schedules, selectedItemKeys);
     cancelItemSelect();
     contextSelectedItemKeys = [];
@@ -235,9 +228,9 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const { head, tail } = getSelectedAdjacentRangeIdx(lastSelectedItemKey);
-  if (!showCustomContextMenu && e.code === 'ArrowDown') {
+  if (!showCustomContextMenu && e.code === "ArrowDown") {
     nextCursor = Math.min(schedules.length - 1, tail + 1);
-  } else if (!showCustomContextMenu && e.code === 'ArrowUp') {
+  } else if (!showCustomContextMenu && e.code === "ArrowUp") {
     nextCursor = Math.max(0, head - 1);
   } else {
     return;
@@ -254,35 +247,35 @@ window.addEventListener('keydown', (e) => {
   renderSchedules();
 });
 
-schedulesEl.addEventListener('keydown', (e: KeyboardEvent) => {
+schedulesEl.addEventListener("keydown", (e: KeyboardEvent) => {
   const { target } = e;
-  if (!(target instanceof HTMLInputElement) || e.code !== 'Enter') {
+  if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
     return;
   }
-  if (editableItemKey === null || findScheduleByKey(editableItemKey).title.trim() === '') {
+  if (editableItemKey === null || findScheduleByKey(editableItemKey).title.trim() === "") {
     focusTarget = null;
     editableItemKey = null;
     renderSchedules();
     return;
   }
   editableItemKey = createNewSchedule(schedules).key;
-  focusTarget = 'input';
+  focusTarget = "input";
   renderSchedules();
 });
 
-schedulesEl.addEventListener('input', (e) => {
+schedulesEl.addEventListener("input", (e) => {
   const { target } = e;
   if (target instanceof HTMLInputElement) {
     findScheduleByKey(editableItemKey).title = target.value;
   }
   if (target instanceof HTMLTextAreaElement) {
-    const rowCount = target.value.split('\n').length;
-    target.setAttribute('rows', rowCount.toString());
-    findScheduleByKey(editableItemKey).notes = target.value.trim().replace(/\n/gi, '</br>');
+    const rowCount = target.value.split("\n").length;
+    target.setAttribute("rows", rowCount.toString());
+    findScheduleByKey(editableItemKey).notes = target.value.trim().replace(/\n/gi, "</br>");
   }
 });
 
-today.addEventListener('mouseup', (e) => {
+today.addEventListener("mouseup", (e) => {
   if (e.button !== 0) {
     return;
   }
@@ -290,19 +283,19 @@ today.addEventListener('mouseup', (e) => {
   if (!(target instanceof HTMLElement) || showCustomContextMenu) {
     return;
   }
-  if (target.closest('.schedule-item')) {
+  if (target.closest(".schedule-item")) {
     return;
   }
   if (findScheduleByKey(editableItemKey) !== null) {
     editableItemKey = null;
   } else {
     editableItemKey = createNewSchedule(schedules).key;
-    focusTarget = 'input';
+    focusTarget = "input";
   }
   renderSchedules();
 });
 
-addButton.addEventListener('mouseup', (e: MouseEvent) => {
+addButton.addEventListener("mouseup", (e: MouseEvent) => {
   if (e.button !== 0) {
     return;
   }
@@ -313,7 +306,7 @@ addButton.addEventListener('mouseup', (e: MouseEvent) => {
   renderSchedules();
 });
 
-schedulesEl.addEventListener('mousedown', (e: PointerEvent) => {
+schedulesEl.addEventListener("mousedown", (e: PointerEvent) => {
   if (e.button !== 0) {
     return;
   }
@@ -323,15 +316,15 @@ schedulesEl.addEventListener('mousedown', (e: PointerEvent) => {
     return;
   }
 
-  const scheduleItemEl = target.closest('.schedule-item');
+  const scheduleItemEl = target.closest(".schedule-item");
   if (!(scheduleItemEl instanceof HTMLElement)) {
     return;
   }
   mousedownTargetKey = scheduleItemEl.dataset.key;
-  initMousePosition = { x: e.clientX, y: e.clientY };
+  mouse.click(new Position(e.clientX, e.clientY));
 });
 
-schedulesEl.addEventListener('mousemove', (e: PointerEvent) => {
+schedulesEl.addEventListener("mousemove", (e: PointerEvent) => {
   if (e.button !== 0) {
     return;
   }
@@ -344,22 +337,19 @@ schedulesEl.addEventListener('mousemove', (e: PointerEvent) => {
     return;
   }
 
-  const scheduleItemEl = target.closest('.schedule-item');
+  const scheduleItemEl = target.closest(".schedule-item");
   if (!(scheduleItemEl instanceof HTMLElement)) {
     return;
   }
   if (activeDrag) {
-    scheduleItemEl.addEventListener('mousemove', eventScheduleItemMouseMove);
-    scheduleItemEl.addEventListener('mouseleave', eventScheduleItemMouseLeave);
+    scheduleItemEl.addEventListener("mousemove", eventScheduleItemMouseMove);
+    scheduleItemEl.addEventListener("mouseleave", eventScheduleItemMouseLeave);
     return;
   }
-  const currentMousePosition: Position = { x: e.clientX, y: e.clientY };
-  if (getDistance(initMousePosition, currentMousePosition) > DRAG_SENSITIVITY) {
-    activeDrag = true;
-  }
+  activeDrag = mouse.isDragged(new Position(e.clientX, e.clientY));
 });
 
-schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
+schedulesEl.addEventListener("mouseup", (e: PointerEvent) => {
   if (e.button !== 0) {
     return;
   }
@@ -369,31 +359,31 @@ schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
     return;
   }
 
-  const scheduleItemEl = target.closest('.schedule-item');
+  const scheduleItemEl = target.closest(".schedule-item");
   if (!(scheduleItemEl instanceof HTMLElement)) {
     return;
   }
 
   const { key } = scheduleItemEl.dataset;
-  if (target.classList.contains('schedule-status')) {
+  if (target.classList.contains("schedule-status")) {
     changeScheduleStatusByKey(key);
     if (key !== editableItemKey) {
       editableItemKey = null;
     }
-  } else if (target.classList.contains('schedule-title')) {
+  } else if (target.classList.contains("schedule-title")) {
     editableItemKey = key;
     cancelItemSelect();
     contextSelectedItemKeys = [];
-    focusTarget = 'input';
+    focusTarget = "input";
     e.stopPropagation();
-  } else if (target.classList.contains('schedule-notes')) {
+  } else if (target.classList.contains("schedule-notes")) {
     editableItemKey = key;
     cancelItemSelect();
     contextSelectedItemKeys = [];
-    focusTarget = 'textarea';
+    focusTarget = "textarea";
     e.stopPropagation();
   } else if (activeDrag) {
-    const position = scheduleItemEl.classList.contains('dragenter-border-back') ? 'back' : 'front';
+    const position = scheduleItemEl.classList.contains("dragenter-border-back") ? "back" : "front";
     insertItem(mousedownTargetKey, key, position);
   } else {
     selectItem(e, key);
@@ -406,7 +396,7 @@ schedulesEl.addEventListener('mouseup', (e: PointerEvent) => {
   renderSchedules();
 });
 
-document.body.addEventListener('mouseup', (e: MouseEvent) => {
+document.body.addEventListener("mouseup", (e: MouseEvent) => {
   if (e.button !== 0) {
     return;
   }
@@ -419,14 +409,14 @@ document.body.addEventListener('mouseup', (e: MouseEvent) => {
   contextSelectedItemKeys = [];
   renderSchedules();
   if (target.offsetParent !== customContextMenu) {
-    customContextMenu.classList.remove('context-menu-visible');
+    customContextMenu.classList.remove("context-menu-visible");
     setTimeout(() => {
       showCustomContextMenu = false;
     });
   }
 });
 
-customContextMenu.addEventListener('mousedown', (e) => {
+customContextMenu.addEventListener("mousedown", (e) => {
   if (e.button !== 0) {
     return;
   }
@@ -434,17 +424,17 @@ customContextMenu.addEventListener('mousedown', (e) => {
   if (!(target instanceof HTMLElement)) {
     return;
   }
-  if (target.dataset.function === 'delete') {
+  if (target.dataset.function === "delete") {
     schedules = filterSelectedSchedules(schedules, selectedItemKeys);
     renderSchedules();
   }
-  customContextMenu.classList.remove('context-menu-visible');
+  customContextMenu.classList.remove("context-menu-visible");
   setTimeout(() => {
     showCustomContextMenu = false;
   });
 });
 
-document.body.addEventListener('contextmenu', (e: MouseEvent) => {
+document.body.addEventListener("contextmenu", (e: MouseEvent) => {
   e.preventDefault();
   const { target } = e;
 
@@ -453,10 +443,10 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
     return;
   }
 
-  const scheduleItemEl = target.closest('.schedule-item');
+  const scheduleItemEl = target.closest(".schedule-item");
 
   if (!(scheduleItemEl instanceof HTMLElement)) {
-    customContextMenu.classList.remove('context-menu-visible');
+    customContextMenu.classList.remove("context-menu-visible");
     showCustomContextMenu = false;
     cancelItemSelect();
     contextSelectedItemKeys = [];
@@ -477,10 +467,10 @@ document.body.addEventListener('contextmenu', (e: MouseEvent) => {
   renderSchedules();
 
   const { clientX, clientY } = e;
-  customContextMenu.classList.add('context-menu-visible');
+  customContextMenu.classList.add("context-menu-visible");
   const { normalizedX, normalizedY } = normalizePosition(clientX, clientY);
-  customContextMenu.style.left = normalizedX + 'px';
-  customContextMenu.style.top = normalizedY + 'px';
+  customContextMenu.style.left = normalizedX + "px";
+  customContextMenu.style.top = normalizedY + "px";
   showCustomContextMenu = true;
 });
 
