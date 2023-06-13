@@ -1,4 +1,4 @@
-import { createRandomKey, createNewSchedule, toggleScheduleCompleted, filterSelectedSchedules } from "../schedule";
+import { createNewSchedule, toggleScheduleCompleted, filterSelectedSchedules } from "../schedule";
 import Schedule from "../../model/Schedule";
 
 describe("utility for schedule ", () => {
@@ -6,13 +6,13 @@ describe("utility for schedule ", () => {
 
   beforeEach(() => {
     schedules = [
-      new Schedule("eat", "breakfast", createRandomKey(), false),
-      new Schedule("wash body", "with lush body shower gel", createRandomKey(), true),
-      new Schedule("package the bag", "for going school", createRandomKey(), false),
-      new Schedule("go to school", "we must go to school", createRandomKey(), true),
-      new Schedule("eat", "happy lunch", createRandomKey(), true),
-      new Schedule("go back to home", "home sweet home", createRandomKey(), false),
-      new Schedule("do homework", "i don't like homework", createRandomKey(), false)
+      new Schedule("eat", "breakfast", false),
+      new Schedule("wash body", "with lush body shower gel", true),
+      new Schedule("package the bag", "for going school", false),
+      new Schedule("go to school", "we must go to school", true),
+      new Schedule("eat", "happy lunch", true),
+      new Schedule("go back to home", "home sweet home", false),
+      new Schedule("do homework", "i don't like homework", false)
     ];
   });
 
@@ -26,7 +26,7 @@ describe("utility for schedule ", () => {
   });
 
   test("toggle schedule completed", () => {
-    const schedule = new Schedule("", "", "", false);
+    const schedule = new Schedule("", "", false);
     toggleScheduleCompleted(schedule);
     expect(schedule.isCompleted).toBe(true);
     toggleScheduleCompleted(schedule);

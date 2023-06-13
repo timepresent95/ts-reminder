@@ -1,16 +1,25 @@
+export interface ContextSelectedBorder {
+    top: boolean;
+    bottom: boolean;
+}
+
 export default class Schedule {
     title: string;
     notes: string;
     isCompleted: boolean;
     key: string;
 
-    constructor(title: string, notes: string, key: string);
-    constructor(title: string, notes: string, key: string, isCompleted: boolean);
-    constructor(title: string, notes: string, key: string, isCompleted?: boolean) {
+    constructor(title: string, notes: string);
+    constructor(title: string, notes: string, isCompleted: boolean);
+    constructor(title: string, notes: string, isCompleted?: boolean) {
         this.title = title;
         this.notes = notes;
-        this.key = key;
+        this.key = this.createRandomKey()
         this.isCompleted = isCompleted ?? false;
+    }
+
+    private createRandomKey(): string {
+        return (Math.random() + 1).toString(36).substring(7) + Date.now();
     }
 
     private getContextSelectedBorderClass(contextSelectedBorder: ContextSelectedBorder | null) {
@@ -48,9 +57,4 @@ export default class Schedule {
           </div>
         </li>`;
     }
-}
-
-export interface ContextSelectedBorder {
-    top: boolean;
-    bottom: boolean;
 }
