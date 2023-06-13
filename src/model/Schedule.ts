@@ -36,6 +36,10 @@ export default class Schedule {
         return ret;
     }
 
+    toggleScheduleCompleted() {
+        this.isCompleted = !this.isCompleted;
+    }
+
     render(selected: boolean, editable: boolean, contextSelectedBorder: ContextSelectedBorder | null) {
         const { title, notes, isCompleted, key } = this;
         const notesValue = notes.trim().replace(/<\/br>/gi, '\n');

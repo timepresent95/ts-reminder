@@ -72,10 +72,9 @@ function compareByIsCompleted(first: ScheduleType, second: ScheduleType) {
   }
 }
 
+// FIXME: toggleScheduleCompleted 메소드가 여기 한곳에서만 사용 되며 의존성은 결국 schedules 배열에 있음
 function changeScheduleStatusByKey(key: string) {
-  const targetSchedule = findScheduleByKey(key);
-  toggleScheduleCompleted(targetSchedule)
-  return;
+  findScheduleByKey(key).toggleScheduleCompleted();
 }
 
 function toggleSelectItem(key: string) {

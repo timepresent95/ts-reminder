@@ -1,4 +1,4 @@
-import { createNewSchedule, toggleScheduleCompleted, filterSelectedSchedules } from "../schedule";
+import { createNewSchedule, filterSelectedSchedules } from "../schedule";
 import Schedule from "../../model/Schedule";
 
 describe("utility for schedule ", () => {
@@ -23,14 +23,6 @@ describe("utility for schedule ", () => {
     expect(newSchedule.notes).toBe("");
     expect(newSchedule.isCompleted).toBe(false);
     expect(schedules).toHaveLength(beforeSchedulesLength + 1);
-  });
-
-  test("toggle schedule completed", () => {
-    const schedule = new Schedule("", "", false);
-    toggleScheduleCompleted(schedule);
-    expect(schedule.isCompleted).toBe(true);
-    toggleScheduleCompleted(schedule);
-    expect(schedule.isCompleted).toBe(false);
   });
 
   test("filter selected schedules", () => {
