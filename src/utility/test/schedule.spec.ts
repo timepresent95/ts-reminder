@@ -22,7 +22,7 @@ describe("utility for schedule ", () => {
     expect(newSchedule.title).toBe("");
     expect(newSchedule.notes).toBe("");
     expect(newSchedule.isCompleted).toBe(false);
-    expect(schedules.length).toBe(beforeSchedulesLength + 1);
+    expect(schedules).toHaveLength(beforeSchedulesLength + 1);
   });
 
   test("toggle schedule completed", () => {
