@@ -2,7 +2,6 @@ import './assets/style/style.scss';
 
 import ScheduleType, { ContextSelectedBorder } from './model/Schedule';
 
-import Schedule from './components/Schedule';
 import { toggleScheduleCompleted, createNewSchedule, filterSelectedSchedules } from "./utility/schedule";
 
 let schedules: ScheduleType[] = [];
@@ -200,7 +199,7 @@ function renderSchedules() {
     allCompletedEl.classList.add('d-none');
   }
   schedulesEl.innerHTML = schedules
-    .map((item, idx) => Schedule(item, selectedItemKeys.includes(item.key), editableItemKey === item.key, getContextSelectedBorder(item.key, idx)))
+    .map((item, idx) => item.render(selectedItemKeys.includes(item.key), editableItemKey === item.key, getContextSelectedBorder(item.key, idx)))
     .join('');
   if (editableItemKey === null || focusTarget === null) {
     return;
