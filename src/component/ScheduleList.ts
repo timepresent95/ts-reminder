@@ -29,7 +29,8 @@ export default class ScheduleList {
   createNewSchedule() {
     const newSchedule = new Schedule();
     this.schedules.push(newSchedule);
-    return newSchedule.key;
+    this.editableItemKey = newSchedule.key;
+    this.focusTarget = "input";
   }
 
   private inputEvent() {
@@ -58,8 +59,7 @@ export default class ScheduleList {
         this.renderSchedules();
         return;
       }
-      this.editableItemKey = this.createNewSchedule();
-      this.focusTarget = "input";
+      this.createNewSchedule();
       this.renderSchedules();
     };
   }

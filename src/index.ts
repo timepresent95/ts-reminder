@@ -74,8 +74,7 @@ today.addEventListener("mouseup", (e) => {
   if (scheduleList.schedules.find(({ key }) => key === scheduleList.editableItemKey) !== undefined) {
     scheduleList.editableItemKey = null;
   } else {
-    scheduleList.editableItemKey = scheduleList.createNewSchedule();
-    scheduleList.focusTarget = "input";
+    scheduleList.createNewSchedule();
   }
 
   scheduleList.renderSchedules();
@@ -88,7 +87,7 @@ addButton.addEventListener("mouseup", (e: MouseEvent) => {
   if (scheduleList.showCustomContextMenu) {
     return;
   }
-  scheduleList.editableItemKey = scheduleList.createNewSchedule();
+  scheduleList.createNewSchedule();
   scheduleList.renderSchedules();
 });
 
