@@ -1,18 +1,21 @@
 import Schedule, { ContextSelectedBorder } from "./Schedule";
 import MouseButton from "../utility/MouseButton";
 import Position from "../utility/Position";
+import { normalizePosition } from "../utility/normalizePosition";
 
 export default class ScheduleList {
+  private readonly currentElement = document.querySelector(".schedules");
+  private readonly allCompletedEl = document.querySelector(".all-completed");
+  private readonly customContextMenu = document.getElementById("context-menu");
+  private editableItemKey: string | null = null;
+  private focusTarget: string | null = null;
+  private rightMouseButton: MouseButton = new MouseButton();
+  private editableItem: Schedule | null = null;
   selectedItemKeys: string[] = [];
   schedules: Schedule[];
   contextSelectedItemKeys: string[] = [];
   showCustomContextMenu = false; // FIXME: 별도로 ContextMenu 관리해야 함
-  editableItemKey: string | null = null;
   eventTargetScheduleKey: string | null = null;
-  private focusTarget: string | null = null;
-  private currentElement = document.querySelector(".schedules");
-  private allCompletedEl = document.querySelector(".all-completed");
-  private rightMouseButton: MouseButton = new MouseButton();
 
   constructor();
   constructor(schedules: Schedule[]);
@@ -24,25 +27,67 @@ export default class ScheduleList {
     this.currentElement.addEventListener("mouseup", this.rightMouseupEvent());
     this.currentElement.addEventListener("keydown", this.keydownEvent());
     this.currentElement.addEventListener("input", this.inputEvent());
+    this.customContextMenu.addEventListener("mouseup", (e) => {
+      if (e.button !== 0) {
+        return;
+      }
+      const { target } = e;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      if (target.dataset.function === "delete") {
+        this.schedules = this.filterSelectedSchedules();
+        this.renderSchedules();
+      }
+      this.customContextMenu.classList.remove("context-menu-visible");
+      setTimeout(() => {
+        this.showCustomContextMenu = false;
+      });
+    });
   }
 
-  createNewSchedule() {
-    const newSchedule = new Schedule();
-    this.schedules.push(newSchedule);
-    this.editableItemKey = newSchedule.key;
-    this.focusTarget = "input";
+  createNewSchedule(toggle: boolean = false) {
+    if (toggle && this.editableItem !== null) {
+      this.resetEditableItemKey();
+    } else {
+      const newSchedule = new Schedule();
+      this.schedules.push(newSchedule);
+      this.setEditableItem(newSchedule);
+      this.focusTarget = "input";
+    }
+    this.renderSchedules();
+  }
+
+  private setEditableItemByKey(scheduleKey: string) {
+    this.editableItem = this.schedules.find((v) => v.key === scheduleKey);
+    this.editableItemKey = scheduleKey;
+  }
+
+  private setEditableItem(schedule: Schedule) {
+    this.editableItem = schedule;
+    this.editableItemKey = schedule.key;
+  }
+
+  resetEditableItemKey() {
+    this.editableItemKey = null;
+    this.editableItem = null;
+  }
+
+  resetSelectedItemKeys() {
+    this.selectedItemKeys = [];
+    this.contextSelectedItemKeys = [];
   }
 
   private inputEvent() {
     return (e: InputEvent) => {
       const { target } = e;
       if (target instanceof HTMLInputElement) {
-        this.schedules.find(({ key }) => key === this.editableItemKey).title = target.value;
+        this.editableItem.title = target.value;
       }
       if (target instanceof HTMLTextAreaElement) {
         const rowCount = target.value.split("\n").length;
         target.setAttribute("rows", rowCount.toString());
-        this.schedules.find(({ key }) => key === this.editableItemKey).notes = target.value.trim().replace(/\n/gi, "</br>");
+        this.editableItem.notes = target.value.trim().replace(/\n/gi, "</br>");
       }
     };
   }
@@ -53,9 +98,9 @@ export default class ScheduleList {
       if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
         return;
       }
-      if (this.editableItemKey === null || this.schedules.find(({ key }) => key === this.editableItemKey).title.trim() === "") {
+      if (this.editableItem.title.trim() === "") {
         this.focusTarget = null;
-        this.editableItemKey = null;
+        this.resetEditableItemKey();
         this.renderSchedules();
         return;
       }
@@ -84,16 +129,16 @@ export default class ScheduleList {
       if (target.classList.contains("schedule-status")) {
         this.changeScheduleStatus(key);
         if (key !== this.editableItemKey) {
-          this.editableItemKey = null;
+          this.resetEditableItemKey();
         }
       } else if (target.classList.contains("schedule-title")) {
-        this.editableItemKey = key;
+        this.setEditableItemByKey(key);
         this.selectedItemKeys = [];
         this.contextSelectedItemKeys = [];
         this.focusTarget = "input";
         e.stopPropagation();
       } else if (target.classList.contains("schedule-notes")) {
-        this.editableItemKey = key;
+        this.setEditableItemByKey(key);
         this.selectedItemKeys = [];
         this.contextSelectedItemKeys = [];
         this.focusTarget = "textarea";
@@ -103,7 +148,7 @@ export default class ScheduleList {
         this.insertItem(this.eventTargetScheduleKey, key, position);
       } else {
         this.selectItem(e, key);
-        this.editableItemKey = null;
+        this.resetEditableItemKey();
         e.stopPropagation();
       }
       this.eventTargetScheduleKey = null;
@@ -132,8 +177,8 @@ export default class ScheduleList {
         return;
       }
       if (this.rightMouseButton.isDragged) {
-        scheduleItemEl.addEventListener("mousemove", this.eventScheduleItemMouseMove.bind(this));
-        scheduleItemEl.addEventListener("mouseleave", this.eventScheduleItemMouseLeave.bind(this));
+        scheduleItemEl.addEventListener("mousemove", this.eventScheduleItemMouseMove);
+        scheduleItemEl.addEventListener("mouseleave", this.eventScheduleItemMouseLeave);
         return;
       }
       this.rightMouseButton.move(new Position(e.clientX, e.clientY));
@@ -165,7 +210,7 @@ export default class ScheduleList {
     target.classList.remove("dragenter-border-back");
   }
 
-  private eventScheduleItemMouseMove(e: PointerEvent) {
+  private eventScheduleItemMouseMove = (e: PointerEvent) => {
     if (e.button !== 0) {
       return;
     }
@@ -180,9 +225,9 @@ export default class ScheduleList {
     } else {
       currentTarget.classList.add("dragenter-border-back");
     }
-  }
+  };
 
-  private eventScheduleItemMouseLeave(e: PointerEvent) {
+  private eventScheduleItemMouseLeave = (e: PointerEvent) => {
     if (e.button !== 0) {
       return;
     }
@@ -194,7 +239,7 @@ export default class ScheduleList {
     currentTarget.removeEventListener("mousemove", this.eventScheduleItemMouseMove);
     currentTarget.removeEventListener("mouseleave", this.eventScheduleItemMouseLeave);
     this.removeDragBorderClass(currentTarget);
-  }
+  };
 
   private changeScheduleStatus(key: string) {
     this.schedules.find((schedule) => schedule.key === key).toggleScheduleCompleted();
@@ -321,4 +366,81 @@ export default class ScheduleList {
   filterSelectedSchedules() {
     return this.schedules.filter(({ key }) => !this.selectedItemKeys.includes(key));
   }
+
+  extendSelectedSchedules = (e: KeyboardEvent) => {
+    if (this.selectedItemKeys.length === 0) {
+      return;
+    }
+    const lastSelectedItemKey = this.selectedItemKeys[this.selectedItemKeys.length - 1];
+    let currentCursor = this.schedules.findIndex(({ key }) => key === lastSelectedItemKey);
+    let nextCursor: number;
+    if (e.code === "Backspace") {
+      this.schedules = this.filterSelectedSchedules();
+      this.resetSelectedItemKeys();
+      this.showCustomContextMenu = false;
+      this.renderSchedules();
+      return;
+    }
+    const { head, tail } = this.getSelectedAdjacentRange(lastSelectedItemKey);
+    if (!this.showCustomContextMenu && e.code === "ArrowDown") {
+      nextCursor = Math.min(this.schedules.length - 1, tail + 1);
+    } else if (!this.showCustomContextMenu && e.code === "ArrowUp") {
+      nextCursor = Math.max(0, head - 1);
+    } else {
+      return;
+    }
+    if (e.shiftKey && currentCursor !== nextCursor) {
+      if (this.selectedItemKeys.find((item) => item === this.schedules[nextCursor].key)) {
+        return;
+      }
+      this.selectedItemKeys.push(this.schedules[nextCursor].key);
+    }
+    if (!e.shiftKey) {
+      this.selectedItemKeys = [this.schedules[nextCursor].key];
+    }
+    this.renderSchedules();
+  };
+
+
+  contextMenuEvent = (e: MouseEvent) => {
+    e.preventDefault();
+    const { target } = e;
+
+    if (!(target instanceof HTMLElement)) {
+      this.renderSchedules();
+      return;
+    }
+
+    const scheduleItemEl = target.closest(".schedule-item");
+
+    if (!(scheduleItemEl instanceof HTMLElement)) {
+      this.customContextMenu.classList.remove("context-menu-visible");
+      this.showCustomContextMenu = false;
+      this.resetSelectedItemKeys();
+      this.renderSchedules();
+      return;
+    }
+    const currentKey = scheduleItemEl.dataset.key;
+    if (currentKey !== this.editableItemKey) {
+      this.resetEditableItemKey();
+    }
+
+    if (this.selectedItemKeys.includes(currentKey)) {
+      this.contextSelectedItemKeys = this.selectedItemKeys;
+    } else {
+      this.resetSelectedItemKeys();
+      this.contextSelectedItemKeys = [scheduleItemEl.dataset.key];
+    }
+    this.renderSchedules();
+
+    const { clientX, clientY } = e;
+    this.customContextMenu.classList.add("context-menu-visible");
+    const {
+      normalizedX,
+      normalizedY
+    } = normalizePosition(new Position(clientX, clientY), this.customContextMenu.clientWidth, this.customContextMenu.clientHeight);
+    this.customContextMenu.style.left = normalizedX + "px";
+    this.customContextMenu.style.top = normalizedY + "px";
+    this.showCustomContextMenu = true;
+  };
 }
