@@ -61,6 +61,8 @@ export default class ScheduleList {
   private setEditableItemByKey(scheduleKey: string) {
     this.editableItem = this.schedules.find((v) => v.key === scheduleKey);
     this.editableItemKey = scheduleKey;
+    this.selectedItemKeys = [];
+    this.contextSelectedItemKeys = [];
   }
 
   private setEditableItem(schedule: Schedule) {
@@ -126,6 +128,7 @@ export default class ScheduleList {
       }
 
       const { key } = scheduleItemEl.dataset;
+
       if (target.classList.contains("schedule-status")) {
         this.changeScheduleStatus(key);
         if (key !== this.editableItemKey) {
@@ -133,14 +136,10 @@ export default class ScheduleList {
         }
       } else if (target.classList.contains("schedule-title")) {
         this.setEditableItemByKey(key);
-        this.selectedItemKeys = [];
-        this.contextSelectedItemKeys = [];
         this.focusTarget = "input";
         e.stopPropagation();
       } else if (target.classList.contains("schedule-notes")) {
         this.setEditableItemByKey(key);
-        this.selectedItemKeys = [];
-        this.contextSelectedItemKeys = [];
         this.focusTarget = "textarea";
         e.stopPropagation();
       } else if (this.rightMouseButton.isDragged) {
