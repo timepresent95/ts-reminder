@@ -1,65 +1,53 @@
 export interface ContextSelectedBorder {
-    top: boolean;
-    bottom: boolean;
+  top: boolean;
+  bottom: boolean;
 }
 
 export default class Schedule {
-    title: string;
-    notes: string;
-    isCompleted: boolean;
-    key: string;
+  private readonly currentEl = document.createElement("li");
+  title: string;
+  notes: string;
+  isCompleted: boolean;
+  key: string;
 
-    constructor();
-    constructor(title: string, notes: string);
-    constructor(title: string, notes: string, isCompleted: boolean);
-    constructor(title?: string, notes?: string, isCompleted?: boolean) {
-        this.title = title ?? "";
-        this.notes = notes ?? "";
-        this.key = this.createRandomKey()
-        this.isCompleted = isCompleted ?? false;
-    }
+  constructor();
+  constructor(title: string, notes: string);
+  constructor(title: string, notes: string, isCompleted: boolean);
+  constructor(title?: string, notes?: string, isCompleted?: boolean) {
+    this.title = title ?? "";
+    this.notes = notes ?? "";
+    this.key = this.createRandomKey();
+    this.isCompleted = isCompleted ?? false;
+  }
 
-    private createRandomKey(): string {
-        return (Math.random() + 1).toString(36).substring(7) + Date.now();
-    }
+  private createRandomKey(): string {
+    return (Math.random() + 1).toString(36).substring(7) + Date.now();
+  }
 
-    private getContextSelectedBorderClass(contextSelectedBorder: ContextSelectedBorder | null) {
-        let ret = 'context-selected';
-        if (contextSelectedBorder === null) {
-            return '';
-        }
-        if (contextSelectedBorder.top) {
-            ret = ret.concat(' ', 'context-selected-border-top');
-        }
-        if (contextSelectedBorder.bottom) {
-            ret = ret.concat(' ', 'context-selected-border-bottom');
-        }
-        return ret;
-    }
+  toggleScheduleCompleted() {
+    this.isCompleted = !this.isCompleted;
+  }
 
-    toggleScheduleCompleted() {
-        this.isCompleted = !this.isCompleted;
+  _render(props: { editable: boolean, className: string[] }) {
+    const { title, notes, isCompleted, key } = this;
+    const notesValue = notes.trim().replace(/<\/br>/gi, "\n");
+    this.currentEl.dataset.key = key;
+    if (props.editable) {
+      this.currentEl.classList.add(...props.className.filter(v => v.trim() !== ""));
+      this.currentEl.innerHTML = `
+        <button class="schedule-status ${isCompleted ? "schedule-status-complete" : ""}"></button>
+        <div class="schedule-content">
+          <input class="schedule-title text-body1" value="${title}"/>
+          <textarea class="schedule-notes text-body1 text-g1" placeholder="Notes" rows="${notes.split("</br>").length}">${notesValue}</textarea>
+        </div>`.trim();
+    } else {
+      this.currentEl.innerHTML = `
+      <button class="schedule-status ${isCompleted ? "schedule-status-complete" : ""}"></button>
+      <div class="schedule-content">
+        <p class="schedule-title text-body1">${title}</p>
+        ${notes === "" ? "" : "<p class=\"schedule-notes text-body1 text-g1\">" + notes + "</p>"}
+      </div>`.trim();
     }
-
-    render(selected: boolean, editable: boolean, contextSelectedBorder: ContextSelectedBorder | null) {
-        const { title, notes, isCompleted, key } = this;
-        const notesValue = notes.trim().replace(/<\/br>/gi, '\n');
-        if (editable) {
-            return `<li data-key='${key}' class='schedule-item editable ${selected ? 'selected' : ''} ${this.getContextSelectedBorderClass(contextSelectedBorder)}'>
-      <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
-      <div class='schedule-content'>
-        <input class='schedule-title text-body1' value='${title}'/>
-        <textarea class='schedule-notes text-body1 text-g1' placeholder='Notes' rows='${notes.split('</br>').length}'>${notesValue}</textarea>
-      </div>
-    </li>`;
-        }
-        return `
-        <li data-key='${key}' class='schedule-item ${selected ? 'selected' : ''} ${this.getContextSelectedBorderClass(contextSelectedBorder)}'>
-          <button class='schedule-status ${isCompleted ? 'schedule-status-complete' : ''}'></button>
-          <div class='schedule-content'>
-            <p class='schedule-title text-body1'>${title}</p>
-            ${notes === '' ? '' : '<p class="schedule-notes text-body1 text-g1">' + notes + '</p>'}
-          </div>
-        </li>`;
-    }
+    return this.currentEl;
+  }
 }

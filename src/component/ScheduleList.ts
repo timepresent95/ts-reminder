@@ -4,7 +4,7 @@ import Position from "../utility/Position";
 import { normalizePosition } from "../utility/normalizePosition";
 
 export default class ScheduleList {
-  private readonly currentElement = document.querySelector(".schedules");
+  private readonly currentElement = document.querySelector(".schedules") as HTMLOListElement;
   private readonly allCompletedEl = document.querySelector(".all-completed");
   private readonly customContextMenu = document.getElementById("context-menu");
   private editableItemKey: string | null = null;
@@ -311,9 +311,18 @@ export default class ScheduleList {
     } else {
       this.allCompletedEl.classList.add("d-none");
     }
-    this.currentElement.innerHTML = this.schedules
-      .map((item, idx) => item.render(this.selectedItemKeys.includes(item.key), this.editableItemKey === item.key, this.getContextSelectedBorder(item.key, idx)))
-      .join("");
+    this.currentElement.innerHTML = "";
+    this.schedules
+      .forEach((item, idx) => this.currentElement.appendChild(item._render({
+        editable: this.editableItemKey === item.key,
+        className: [
+          "schedule-item",
+          this.editableItemKey === item.key ? "editable" : "",
+          this.selectedItemKeys.includes(item.key) ? "selected" : "",
+          ...this.getContextSelectedBorderClass(item.key, idx)
+        ]
+      })));
+
     if (this.editableItemKey === null || this.focusTarget === null) {
       return;
     }
@@ -351,19 +360,20 @@ export default class ScheduleList {
     });
   }
 
-  private getContextSelectedBorder(key: string, idx: number): ContextSelectedBorder | null {
+  private getContextSelectedBorderClass = (key: string, idx: number): string[] => {
+    const ret: string[] = [];
     if (!this.contextSelectedItemKeys.includes(key)) {
-      return null;
+      return ret;
     }
-    const ret: ContextSelectedBorder = { top: false, bottom: false };
+    ret.push("context-selected");
     if (idx === 0 || !this.contextSelectedItemKeys.includes(this.schedules[idx - 1].key)) {
-      ret.top = true;
+      ret.push("context-selected-border-top");
     }
     if (idx === this.schedules.length - 1 || !this.contextSelectedItemKeys.includes(this.schedules[idx + 1].key)) {
-      ret.bottom = true;
+      ret.push("context-selected-border-bottom");
     }
     return ret;
-  }
+  };
 
   filterSelectedSchedules() {
     return this.schedules.filter(({ key }) => !this.selectedItemKeys.includes(key));

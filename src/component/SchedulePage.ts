@@ -1,6 +1,4 @@
 import ScheduleList from "./ScheduleList";
-import { normalizePosition } from "../utility/normalizePosition";
-import Position from "../utility/Position";
 
 export default class SchedulePage {
   private readonly headerTitle = document.querySelector("header").querySelector("h1");
