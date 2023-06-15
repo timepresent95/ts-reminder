@@ -305,7 +305,8 @@ export default class ScheduleList {
     this.schedules = this.schedules.filter(({
       title,
       key
-    }) => this.editableItemKey === key || title.trim() !== "").sort(this.compareByIsCompleted);
+    }) => this.editableItemKey === key || title.trim() !== "");
+    this.sort();
     if (this.schedules.length === 0) {
       this.allCompletedEl.classList.remove("d-none");
     } else {
@@ -333,20 +334,22 @@ export default class ScheduleList {
     }
   }
 
-  private compareByIsCompleted(first: Schedule, second: Schedule) {
-    if (first.title === "") {
-      return 1;
-    }
-    if (second.title === "") {
-      return -1;
-    }
-    if (first.isCompleted === second.isCompleted) {
-      return 0;
-    } else if (first.isCompleted) {
-      return 1;
-    } else {
-      return -1;
-    }
+  private sort() {
+    this.schedules.sort((first: Schedule, second: Schedule) => {
+      if (first.title === "") {
+        return 1;
+      }
+      if (second.title === "") {
+        return -1;
+      }
+      if (first.isCompleted === second.isCompleted) {
+        return 0;
+      } else if (first.isCompleted) {
+        return 1;
+      } else {
+        return -1;
+      }
+    });
   }
 
   private getContextSelectedBorder(key: string, idx: number): ContextSelectedBorder | null {
