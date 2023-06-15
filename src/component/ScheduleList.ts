@@ -9,7 +9,7 @@ export default class ScheduleList {
   showCustomContextMenu = false; // FIXME: 별도로 ContextMenu 관리해야 함
   editableItemKey: string | null = null;
   eventTargetScheduleKey: string | null = null;
-  focusTarget: string | null = null;
+  private focusTarget: string | null = null;
   private currentElement = document.querySelector(".schedules");
   private allCompletedEl = document.querySelector(".all-completed");
   private rightMouseButton: MouseButton = new MouseButton();
