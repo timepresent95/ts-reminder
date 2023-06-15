@@ -9,11 +9,12 @@ export default class Schedule {
     isCompleted: boolean;
     key: string;
 
+    constructor();
     constructor(title: string, notes: string);
     constructor(title: string, notes: string, isCompleted: boolean);
-    constructor(title: string, notes: string, isCompleted?: boolean) {
-        this.title = title;
-        this.notes = notes;
+    constructor(title?: string, notes?: string, isCompleted?: boolean) {
+        this.title = title ?? "";
+        this.notes = notes ?? "";
         this.key = this.createRandomKey()
         this.isCompleted = isCompleted ?? false;
     }
