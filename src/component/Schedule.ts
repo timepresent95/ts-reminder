@@ -31,6 +31,18 @@ export default class Schedule {
     }
   }
 
+  focus(focusTarget: "input" | "textarea" | null) {
+    if (focusTarget === null) {
+      return;
+    }
+    const target = this.currentEl.querySelector(focusTarget);
+    if(target === null) {
+      return;
+    }
+    target.focus();
+    target.selectionStart = target.value.length;
+  }
+
   render(props: { editable: boolean, className: string[] }) {
     const { title, notes, isCompleted, key } = this;
     const notesValue = notes.trim().replace(/<\/br>/gi, "\n");

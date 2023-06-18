@@ -40,7 +40,7 @@ export default class MouseButton {
   }
 
   move(curPosition: Position) {
-    if (!this.isClicked || this.isDragged) {
+    if (!this.isClicked || this.isDragged || this.prevPosition === null) {
       return;
     }
     this.dragDistance += this.prevPosition.getDistance(curPosition);

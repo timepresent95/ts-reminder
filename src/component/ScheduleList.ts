@@ -4,11 +4,11 @@ import Position from "../utility/Position";
 import { normalizePosition } from "../utility/normalizePosition";
 
 export default class ScheduleList {
-  private readonly currentElement = document.querySelector(".schedules") as HTMLOListElement;
+  private readonly currentEl = document.querySelector(".schedules") as HTMLOListElement;
   private readonly allCompletedEl = document.querySelector(".all-completed");
-  private readonly customContextMenu = document.getElementById("context-menu");
+  private readonly contextMenuEl = document.getElementById("context-menu");
   private editableItemKey: string | null = null;
-  private focusTarget: string | null = null;
+  private focusTarget: "input" | "textarea" | null = null;
   private rightMouseButton: MouseButton = new MouseButton();
   private editableItem: Schedule | null = null;
   selectedItemKeys: string[] = [];
@@ -21,13 +21,16 @@ export default class ScheduleList {
   constructor(schedules: Schedule[]);
   constructor(schedules?: Schedule[]) {
     this.schedules = schedules ?? [];
-    this.currentElement.classList.add("schedules");
-    this.currentElement.addEventListener("mousedown", this.rightMousedownEvent());
-    this.currentElement.addEventListener("mousemove", this.rightMousemoveEvent());
-    this.currentElement.addEventListener("mouseup", this.rightMouseupEvent());
-    this.currentElement.addEventListener("keydown", this.keydownEvent());
-    this.currentElement.addEventListener("input", this.inputEvent());
-    this.customContextMenu.addEventListener("mouseup", (e) => {
+    this.currentEl.classList.add("schedules");
+    this.currentEl.addEventListener("mousedown", this.rightMousedownEvent());
+    this.currentEl.addEventListener("mousemove", this.rightMousemoveEvent());
+    this.currentEl.addEventListener("mouseup", this.rightMouseupEvent);
+    this.currentEl.addEventListener("keydown", this.keydownEvent);
+    this.currentEl.addEventListener("input", this.inputEvent);
+    if (this.contextMenuEl === null) {
+      throw new Error("contextMenu Element is not exist");
+    }
+    this.contextMenuEl.addEventListener("mouseup", (e) => {
       if (e.button !== 0) {
         return;
       }
@@ -39,7 +42,10 @@ export default class ScheduleList {
         this.schedules = this.filterSelectedSchedules();
         this.render();
       }
-      this.customContextMenu.classList.remove("context-menu-visible");
+      if (this.contextMenuEl === null) {
+        throw new Error("contextMenu Element is not exist");
+      }
+      this.contextMenuEl.classList.remove("context-menu-visible");
       setTimeout(() => {
         this.showCustomContextMenu = false;
       });
@@ -59,7 +65,7 @@ export default class ScheduleList {
   }
 
   private setEditableItemByKey(scheduleKey: string) {
-    this.editableItem = this.schedules.find((v) => v.key === scheduleKey);
+    this.editableItem = this.schedules.find((v) => v.key === scheduleKey) ?? null;
     this.editableItemKey = scheduleKey;
     this.selectedItemKeys = [];
     this.contextSelectedItemKeys = [];
@@ -80,82 +86,82 @@ export default class ScheduleList {
     this.contextSelectedItemKeys = [];
   }
 
-  private inputEvent() {
-    return (e: InputEvent) => {
-      const { target } = e;
-      if (target instanceof HTMLInputElement) {
-        this.editableItem.title = target.value;
-      }
-      if (target instanceof HTMLTextAreaElement) {
-        const rowCount = target.value.split("\n").length;
-        target.setAttribute("rows", rowCount.toString());
-        this.editableItem.notes = target.value.trim().replace(/\n/gi, "</br>");
-      }
-    };
-  }
+  private inputEvent = (e: InputEvent) => {
+    if (this.editableItem === null) {
+      throw new Error("editable item is not exist");
+    }
 
-  private keydownEvent() {
-    return (e: KeyboardEvent) => {
-      const { target } = e;
-      if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
-        return;
-      }
-      if (this.editableItem.title.trim() === "") {
-        this.focusTarget = null;
-        this.resetEditableItemKey();
-        this.render();
-        return;
-      }
-      this.createNewSchedule();
+    const { target } = e;
+    if (target instanceof HTMLInputElement) {
+      this.editableItem.title = target.value;
+    }
+    if (target instanceof HTMLTextAreaElement) {
+      const rowCount = target.value.split("\n").length;
+      target.setAttribute("rows", rowCount.toString());
+      this.editableItem.notes = target.value.trim().replace(/\n/gi, "</br>");
+    }
+  };
+
+  private keydownEvent = (e: KeyboardEvent) => {
+    if (this.editableItem === null) {
+      throw new Error("editable item is not exist");
+    }
+
+    const { target } = e;
+    if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
+      return;
+    }
+    if (this.editableItem.title.trim() === "") {
+      this.focusTarget = null;
+      this.resetEditableItemKey();
       this.render();
-    };
-  }
+      return;
+    }
+    this.createNewSchedule();
+    this.render();
+  };
 
-  private rightMouseupEvent() {
-    return (e: PointerEvent) => {
-      if (e.button !== 0) {
-        return;
-      }
-      const { target } = e;
+  private rightMouseupEvent = (e: PointerEvent) => {
+    if (e.button !== 0) {
+      return;
+    }
+    const { target } = e;
 
-      if (!(target instanceof HTMLElement) || this.showCustomContextMenu) {
-        return;
-      }
+    if (!(target instanceof HTMLElement) || this.showCustomContextMenu) {
+      return;
+    }
 
-      const scheduleItemEl = target.closest(".schedule-item");
-      if (!(scheduleItemEl instanceof HTMLElement)) {
-        return;
-      }
+    const scheduleItemEl = target.closest(".schedule-item");
+    if (!(scheduleItemEl instanceof HTMLElement) || scheduleItemEl.dataset.key === undefined) {
+      return;
+    }
 
-      const { key } = scheduleItemEl.dataset;
-
-      if (target.classList.contains("schedule-status")) {
-        this.changeScheduleStatus(key);
-        if (key !== this.editableItemKey) {
-          this.resetEditableItemKey();
-        }
-      } else if (target.classList.contains("schedule-title")) {
-        this.setEditableItemByKey(key);
-        this.focusTarget = "input";
-        e.stopPropagation();
-      } else if (target.classList.contains("schedule-notes")) {
-        this.setEditableItemByKey(key);
-        this.focusTarget = "textarea";
-        e.stopPropagation();
-      } else if (this.rightMouseButton.isDragged) {
-        const position = scheduleItemEl.classList.contains("dragenter-border-back") ? "back" : "front";
-        this.insertItem(this.eventTargetScheduleKey, key, position);
-      } else {
-        this.selectItem(e, key);
+    if (target.classList.contains("schedule-status")) {
+      this.changeScheduleStatus(scheduleItemEl.dataset.key);
+      if (scheduleItemEl.dataset.key !== this.editableItemKey) {
         this.resetEditableItemKey();
-        e.stopPropagation();
       }
-      this.eventTargetScheduleKey = null;
-      this.rightMouseButton.release();
-      this.removeDragBorderClass(scheduleItemEl);
-      this.render();
-    };
-  }
+    } else if (target.classList.contains("schedule-title")) {
+      this.setEditableItemByKey(scheduleItemEl.dataset.key);
+      this.focusTarget = "input";
+      e.stopPropagation();
+    } else if (target.classList.contains("schedule-notes")) {
+      this.setEditableItemByKey(scheduleItemEl.dataset.key);
+      this.focusTarget = "textarea";
+      e.stopPropagation();
+    } else if (this.eventTargetScheduleKey !== null && this.rightMouseButton.isDragged) {
+      const position = scheduleItemEl.classList.contains("dragenter-border-back") ? "back" : "front";
+      this.insertItem(this.eventTargetScheduleKey, scheduleItemEl.dataset.key, position);
+    } else {
+      this.selectItem(e, scheduleItemEl.dataset.key);
+      this.resetEditableItemKey();
+      e.stopPropagation();
+    }
+    this.eventTargetScheduleKey = null;
+    this.rightMouseButton.release();
+    this.removeDragBorderClass(scheduleItemEl);
+    this.render();
+  };
 
   private rightMousemoveEvent() {
     return (e: MouseEvent) => {
@@ -199,7 +205,7 @@ export default class ScheduleList {
       if (!(scheduleItemEl instanceof HTMLElement)) {
         return;
       }
-      this.eventTargetScheduleKey = scheduleItemEl.dataset.key;
+      this.eventTargetScheduleKey = scheduleItemEl.dataset.key ?? null;
       this.rightMouseButton.click(new Position(e.clientX, e.clientY));
     };
   }
@@ -241,7 +247,7 @@ export default class ScheduleList {
   };
 
   private changeScheduleStatus(key: string) {
-    this.schedules.find((schedule) => schedule.key === key).toggleScheduleCompleted();
+    this.schedules.find((schedule) => schedule.key === key)?.toggleScheduleCompleted();
   }
 
   private toggleSelectItem(key: string) {
@@ -301,6 +307,9 @@ export default class ScheduleList {
   }
 
   render() {
+    if(this.allCompletedEl === null) {
+      throw new Error("allCompleted Element is not exist")
+    }
     this.schedules = this.schedules.filter(({
       title,
       key
@@ -311,9 +320,9 @@ export default class ScheduleList {
     } else {
       this.allCompletedEl.classList.add("d-none");
     }
-    this.currentElement.innerHTML = "";
+    this.currentEl.innerHTML = "";
     this.schedules
-      .forEach((item, idx) => this.currentElement.appendChild(item.render({
+      .forEach((item, idx) => this.currentEl.appendChild(item.render({
         editable: this.editableItemKey === item.key,
         className: [
           "schedule-item",
@@ -322,24 +331,9 @@ export default class ScheduleList {
           ...this.getContextSelectedBorderClass(item.key, idx)
         ]
       })));
-
-    if (this.editableItemKey === null || this.focusTarget === null) {
-      return;
-    }
-
-    const editableItemEl = Array
-      .from(this.currentElement.children)
-      .find(el => {
-        if (!(el instanceof HTMLLIElement)) {
-          return;
-        }
-        return el.dataset.key === this.editableItemKey;
-      })
-      .querySelector(this.focusTarget);
-    if (editableItemEl instanceof HTMLInputElement || editableItemEl instanceof HTMLTextAreaElement) {
-      editableItemEl.focus();
-      editableItemEl.selectionStart = editableItemEl.value.length;
-    }
+    this.schedules
+      .find((v) => v.key === this.editableItemKey)
+      ?.focus(this.focusTarget);
   }
 
   private sort() {
@@ -415,6 +409,10 @@ export default class ScheduleList {
 
 
   contextMenuEvent = (e: MouseEvent) => {
+    if (this.contextMenuEl === null) {
+      throw new Error("contextMenu Element is not exist");
+    }
+
     e.preventDefault();
     const { target } = e;
 
@@ -426,13 +424,16 @@ export default class ScheduleList {
     const scheduleItemEl = target.closest(".schedule-item");
 
     if (!(scheduleItemEl instanceof HTMLElement)) {
-      this.customContextMenu.classList.remove("context-menu-visible");
+      this.contextMenuEl.classList.remove("context-menu-visible");
       this.showCustomContextMenu = false;
       this.resetSelectedItemKeys();
       this.render();
       return;
     }
     const currentKey = scheduleItemEl.dataset.key;
+    if(currentKey === undefined) {
+      return;
+    }
     if (currentKey !== this.editableItemKey) {
       this.resetEditableItemKey();
     }
@@ -441,18 +442,18 @@ export default class ScheduleList {
       this.contextSelectedItemKeys = this.selectedItemKeys;
     } else {
       this.resetSelectedItemKeys();
-      this.contextSelectedItemKeys = [scheduleItemEl.dataset.key];
+      this.contextSelectedItemKeys = [currentKey];
     }
     this.render();
 
     const { clientX, clientY } = e;
-    this.customContextMenu.classList.add("context-menu-visible");
+    this.contextMenuEl.classList.add("context-menu-visible");
     const {
       normalizedX,
       normalizedY
-    } = normalizePosition(new Position(clientX, clientY), this.customContextMenu.clientWidth, this.customContextMenu.clientHeight);
-    this.customContextMenu.style.left = normalizedX + "px";
-    this.customContextMenu.style.top = normalizedY + "px";
+    } = normalizePosition(new Position(clientX, clientY), this.contextMenuEl.clientWidth, this.contextMenuEl.clientHeight);
+    this.contextMenuEl.style.left = normalizedX + "px";
+    this.contextMenuEl.style.top = normalizedY + "px";
     this.showCustomContextMenu = true;
   };
 }

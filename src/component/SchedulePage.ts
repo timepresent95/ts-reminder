@@ -1,15 +1,27 @@
 import ScheduleList from "./ScheduleList";
 
 export default class SchedulePage {
-  private readonly headerTitle = document.querySelector("header").querySelector("h1");
-  private readonly currentElement = document.querySelector("main");
-  private readonly addButton = document.querySelector(".add-button");
-  private readonly customContextMenu = document.getElementById("context-menu");
+  private readonly headerTitleEl = document.querySelector("header")?.querySelector("h1") ?? null;
+  private readonly currentEl = document.querySelector("main");
+  private readonly addButtonEl = document.querySelector(".add-button");
+  private readonly contextMenuEl = document.getElementById("context-menu");
   private scheduleList = new ScheduleList();
 
   constructor(title: string) {
-    this.headerTitle.innerText = title;
-    this.currentElement.addEventListener("mouseup", (e: MouseEvent) => {
+    if(this.headerTitleEl === null) {
+      throw new Error("headerTitle Element is not exist")
+    }
+    if(this.currentEl === null) {
+      throw new Error("current Element is not exist")
+    }
+    if(this.addButtonEl === null) {
+      throw new Error("addButton Element is not exist")
+    }
+    if(this.contextMenuEl === null) {
+      throw new Error("contextMenu Element is not exist")
+    }
+    this.headerTitleEl.innerText = title;
+    this.currentEl.addEventListener("mouseup", (e: MouseEvent) => {
       if (e.button !== 0) {
         return;
       }
@@ -23,7 +35,7 @@ export default class SchedulePage {
       this.scheduleList.createNewSchedule(true);
     });
 
-    this.addButton.addEventListener("mouseup", (e: MouseEvent) => {
+    this.addButtonEl.addEventListener("mouseup", (e: MouseEvent) => {
       if (e.button !== 0) {
         return;
       }
@@ -46,8 +58,11 @@ export default class SchedulePage {
       }
       this.scheduleList.resetSelectedItemKeys();
       this.scheduleList.render();
-      if (target.offsetParent !== this.customContextMenu) {
-        this.customContextMenu.classList.remove("context-menu-visible");
+      if(this.contextMenuEl === null) {
+        throw new Error("contextMenu Element is not exist")
+      }
+      if (target.offsetParent !== this.contextMenuEl) {
+        this.contextMenuEl.classList.remove("context-menu-visible");
         setTimeout(() => {
           this.scheduleList.showCustomContextMenu = false;
         });
