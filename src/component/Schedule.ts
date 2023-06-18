@@ -13,7 +13,6 @@ export default class Schedule {
     this.notes = notes ?? "";
     this.key = this.createRandomKey();
     this.isCompleted = isCompleted ?? false;
-    this.currentEl.addEventListener("mouseup", this.mouseupEvent);
   }
 
   private createRandomKey(): string {
@@ -22,13 +21,6 @@ export default class Schedule {
 
   toggleScheduleCompleted() {
     this.isCompleted = !this.isCompleted;
-  }
-
-  // TODO: ScheduleList 내 마우스 이벤트 가져오기
-  private mouseupEvent(e: MouseEvent) {
-    if (e.button !== 0) {
-      return;
-    }
   }
 
   focus(focusTarget: "input" | "textarea" | null) {
@@ -43,12 +35,17 @@ export default class Schedule {
     target.selectionStart = target.value.length;
   }
 
+  private setClassName(className: string[]) {
+    this.currentEl.classList.add(...className.filter(v => v.trim() !== ""));
+    this.currentEl.classList.remove(...Array.from(this.currentEl.classList).filter(v => !className.includes(v)))
+  }
+
   render(props: { editable: boolean, className: string[] }) {
     const { title, notes, isCompleted, key } = this;
     const notesValue = notes.trim().replace(/<\/br>/gi, "\n");
     this.currentEl.dataset.key = key;
+    this.setClassName(props.className)
     if (props.editable) {
-      this.currentEl.classList.add(...props.className.filter(v => v.trim() !== ""));
       this.currentEl.innerHTML = `
         <button class="schedule-status ${isCompleted ? "schedule-status-complete" : ""}"></button>
         <div class="schedule-content">

@@ -307,8 +307,8 @@ export default class ScheduleList {
   }
 
   render() {
-    if(this.allCompletedEl === null) {
-      throw new Error("allCompleted Element is not exist")
+    if (this.allCompletedEl === null) {
+      throw new Error("allCompleted Element is not exist");
     }
     this.schedules = this.schedules.filter(({
       title,
@@ -322,15 +322,17 @@ export default class ScheduleList {
     }
     this.currentEl.innerHTML = "";
     this.schedules
-      .forEach((item, idx) => this.currentEl.appendChild(item.render({
-        editable: this.editableItemKey === item.key,
-        className: [
-          "schedule-item",
-          this.editableItemKey === item.key ? "editable" : "",
-          this.selectedItemKeys.includes(item.key) ? "selected" : "",
-          ...this.getContextSelectedBorderClass(item.key, idx)
-        ]
-      })));
+      .forEach((item, idx) => {
+        this.currentEl.appendChild(item.render({
+          editable: this.editableItemKey === item.key,
+          className: [
+            "schedule-item",
+            this.editableItemKey === item.key ? "editable" : "",
+            this.selectedItemKeys.includes(item.key) ? "selected" : "",
+            ...this.getContextSelectedBorderClass(item.key, idx)
+          ]
+        }));
+      });
     this.schedules
       .find((v) => v.key === this.editableItemKey)
       ?.focus(this.focusTarget);
@@ -431,7 +433,7 @@ export default class ScheduleList {
       return;
     }
     const currentKey = scheduleItemEl.dataset.key;
-    if(currentKey === undefined) {
+    if (currentKey === undefined) {
       return;
     }
     if (currentKey !== this.editableItemKey) {
