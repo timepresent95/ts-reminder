@@ -45,7 +45,7 @@ export default class SchedulePage {
         return;
       }
       this.scheduleList.resetSelectedItemKeys();
-      this.scheduleList.renderSchedules();
+      this.scheduleList.render();
       if (target.offsetParent !== this.customContextMenu) {
         this.customContextMenu.classList.remove("context-menu-visible");
         setTimeout(() => {
@@ -56,6 +56,6 @@ export default class SchedulePage {
 
     document.body.addEventListener("contextmenu", this.scheduleList.contextMenuEvent);
 
-    this.scheduleList.renderSchedules();
+    this.scheduleList.render();
   }
 }

@@ -1,8 +1,3 @@
-export interface ContextSelectedBorder {
-  top: boolean;
-  bottom: boolean;
-}
-
 export default class Schedule {
   private readonly currentEl = document.createElement("li");
   title: string;
@@ -18,6 +13,7 @@ export default class Schedule {
     this.notes = notes ?? "";
     this.key = this.createRandomKey();
     this.isCompleted = isCompleted ?? false;
+    this.currentEl.addEventListener("mouseup", this.mouseupEvent);
   }
 
   private createRandomKey(): string {
@@ -28,7 +24,14 @@ export default class Schedule {
     this.isCompleted = !this.isCompleted;
   }
 
-  _render(props: { editable: boolean, className: string[] }) {
+  // TODO: ScheduleList 내 마우스 이벤트 가져오기
+  private mouseupEvent(e: MouseEvent) {
+    if (e.button !== 0) {
+      return;
+    }
+  }
+
+  render(props: { editable: boolean, className: string[] }) {
     const { title, notes, isCompleted, key } = this;
     const notesValue = notes.trim().replace(/<\/br>/gi, "\n");
     this.currentEl.dataset.key = key;

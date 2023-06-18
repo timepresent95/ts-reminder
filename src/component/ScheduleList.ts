@@ -1,4 +1,4 @@
-import Schedule, { ContextSelectedBorder } from "./Schedule";
+import Schedule from "./Schedule";
 import MouseButton from "../utility/MouseButton";
 import Position from "../utility/Position";
 import { normalizePosition } from "../utility/normalizePosition";
@@ -37,7 +37,7 @@ export default class ScheduleList {
       }
       if (target.dataset.function === "delete") {
         this.schedules = this.filterSelectedSchedules();
-        this.renderSchedules();
+        this.render();
       }
       this.customContextMenu.classList.remove("context-menu-visible");
       setTimeout(() => {
@@ -55,7 +55,7 @@ export default class ScheduleList {
       this.setEditableItem(newSchedule);
       this.focusTarget = "input";
     }
-    this.renderSchedules();
+    this.render();
   }
 
   private setEditableItemByKey(scheduleKey: string) {
@@ -103,11 +103,11 @@ export default class ScheduleList {
       if (this.editableItem.title.trim() === "") {
         this.focusTarget = null;
         this.resetEditableItemKey();
-        this.renderSchedules();
+        this.render();
         return;
       }
       this.createNewSchedule();
-      this.renderSchedules();
+      this.render();
     };
   }
 
@@ -153,7 +153,7 @@ export default class ScheduleList {
       this.eventTargetScheduleKey = null;
       this.rightMouseButton.release();
       this.removeDragBorderClass(scheduleItemEl);
-      this.renderSchedules();
+      this.render();
     };
   }
 
@@ -300,7 +300,7 @@ export default class ScheduleList {
     }
   }
 
-  renderSchedules() {
+  render() {
     this.schedules = this.schedules.filter(({
       title,
       key
@@ -313,7 +313,7 @@ export default class ScheduleList {
     }
     this.currentElement.innerHTML = "";
     this.schedules
-      .forEach((item, idx) => this.currentElement.appendChild(item._render({
+      .forEach((item, idx) => this.currentElement.appendChild(item.render({
         editable: this.editableItemKey === item.key,
         className: [
           "schedule-item",
@@ -390,7 +390,7 @@ export default class ScheduleList {
       this.schedules = this.filterSelectedSchedules();
       this.resetSelectedItemKeys();
       this.showCustomContextMenu = false;
-      this.renderSchedules();
+      this.render();
       return;
     }
     const { head, tail } = this.getSelectedAdjacentRange(lastSelectedItemKey);
@@ -410,7 +410,7 @@ export default class ScheduleList {
     if (!e.shiftKey) {
       this.selectedItemKeys = [this.schedules[nextCursor].key];
     }
-    this.renderSchedules();
+    this.render();
   };
 
 
@@ -419,7 +419,7 @@ export default class ScheduleList {
     const { target } = e;
 
     if (!(target instanceof HTMLElement)) {
-      this.renderSchedules();
+      this.render();
       return;
     }
 
@@ -429,7 +429,7 @@ export default class ScheduleList {
       this.customContextMenu.classList.remove("context-menu-visible");
       this.showCustomContextMenu = false;
       this.resetSelectedItemKeys();
-      this.renderSchedules();
+      this.render();
       return;
     }
     const currentKey = scheduleItemEl.dataset.key;
@@ -443,7 +443,7 @@ export default class ScheduleList {
       this.resetSelectedItemKeys();
       this.contextSelectedItemKeys = [scheduleItemEl.dataset.key];
     }
-    this.renderSchedules();
+    this.render();
 
     const { clientX, clientY } = e;
     this.customContextMenu.classList.add("context-menu-visible");
