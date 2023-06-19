@@ -3,6 +3,7 @@ import Position from "../utility/Position";
 export default class ContextMenu {
   private readonly currentEl: HTMLElement;
   private readonly contextMenuListEl: HTMLUListElement;
+  private readonly eventBus: (action: string) => void;
 
   constructor(eventBus: (action: string) => void) {
     const currentElement = document.getElementById("context-menu");
@@ -12,6 +13,7 @@ export default class ContextMenu {
     }
     this.currentEl = currentElement;
     this.contextMenuListEl = contextMenuListElement;
+    this.eventBus = eventBus;
     this.currentEl.addEventListener("mouseup", (e) => {
       if (e.button !== 0) {
         return;
@@ -20,7 +22,7 @@ export default class ContextMenu {
 
       const { target } = e;
       if (target instanceof HTMLElement && target.dataset.function !== undefined) {
-        eventBus(target.dataset.function);
+        this.eventBus(target.dataset.function);
       }
       this.hide();
     });
