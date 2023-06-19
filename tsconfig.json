@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
+    "strict": true,
     "target": "ES5",
     "allowJs": true
   },

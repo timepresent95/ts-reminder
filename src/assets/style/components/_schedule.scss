@@ -64,28 +64,30 @@
   }
 
   &.context-selected {
-    border-left: 3px solid variables.$w1;
-    border-right: 3px solid variables.$w1;
+    border-color: variables.$b1;
+    border-left: 3px solid;
+    border-right: 3px solid;
 
     &-border-top {
-      border-top: 3px solid variables.$w1;
+      border-top: 3px solid;
     }
 
     &-border-bottom {
-      border-bottom: 3px solid variables.$w1;
+      border-bottom: 3px solid;
     }
   }
 
   &.selected.context-selected {
-    border-left: 3px solid variables.$b1;
-    border-right: 3px solid variables.$b1;
+    border-color: variables.$w1;
+    border-left: 3px solid;
+    border-right: 3px solid;
 
     &-border-top {
-      border-top: 3px solid variables.$b1;
+      border-top: 3px solid;
     }
 
     &-border-bottom {
-      border-bottom: 3px solid variables.$b1;
+      border-bottom: 3px solid;
     }
   }
 

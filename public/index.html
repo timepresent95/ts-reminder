@@ -10,18 +10,18 @@
 </head>
 <body>
 <header class='p-20'>
-  <button class='add-button ml-auto mb-40 text-g3'>&plus;</button>
-  <h1 class='text-today text-h1b'>Today</h1>
+  <button id="add-button" class='add-button ml-auto mb-40 text-g3'>&plus;</button>
+  <h1 id="title" class='text-today text-h1b'>Today</h1>
 </header>
 <main class='today'>
-  <p class='all-completed my-auto text-h2 text-g3'>All Items Completed</p>
-  <ol class='schedules'>
+  <p id="all-completed" class='all-completed my-auto text-h2 text-g3'>All Items Completed</p>
+  <ol id="schedules" class='schedules'>
   </ol>
 </main>
-<div id='context-menu' class='context-menu text-body1'>
-  <ul class='context-menu-wrap'>
-    <li class='context-menu-item' data-function='delete'>Delete</li>
+<section id='context-menu' class='context-menu text-body1 d-none'>
+  <ul class='context-menu-list'>
+    <li class='context-menu-item p-4 m-4' data-function='DELETE_CONTEXT_MENU'>Delete</li>
   </ul>
-</div>
+</section>
 </body>
 </html>

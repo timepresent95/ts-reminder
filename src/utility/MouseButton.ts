@@ -6,11 +6,11 @@ export default class MouseButton {
     return this._isDragged;
   }
 
-  private isClicked: boolean;
-  private _isDragged: boolean;
+  private isClicked: boolean = false;
+  private _isDragged: boolean = false;
   private dragDistance: number;
-  private clickedPosition: Position | null;
-  private prevPosition: Position | null;
+  private clickedPosition: Position | null = null;
+  private prevPosition: Position | null = null;
   private readonly dragSensitivity: number;
 
   constructor();

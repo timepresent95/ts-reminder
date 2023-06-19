@@ -1,4 +1,4 @@
-import webpack from "webpack";
+import {Configuration} from "webpack";
 import 'webpack-dev-server';
 
 import path from "path";
@@ -11,7 +11,7 @@ const stylesHandler = isProduction
     ? MiniCssExtractPlugin.loader
     : "style-loader";
 
-const config: webpack.Configuration = {
+const config: Configuration = {
     entry: "./src/index.ts",
     output: {
         path: path.resolve(__dirname, "dist"),
@@ -54,8 +54,7 @@ const config: webpack.Configuration = {
 module.exports = () => {
     if (isProduction) {
         config.mode = "production";
-
-        config.plugins.push(new MiniCssExtractPlugin());
+        config.plugins?.push(new MiniCssExtractPlugin());
     } else {
         config.mode = "development";
     }
