@@ -14,7 +14,7 @@ export default class ContextMenu {
     this.currentEl = currentElement;
     this.contextMenuListEl = contextMenuListElement;
     this.eventBus = eventBus;
-    this.currentEl.addEventListener("mouseup", (e) => {
+    this.currentEl.addEventListener("click", (e) => {
       if (e.button !== 0) {
         return;
       }

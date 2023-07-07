@@ -1,0 +1,40 @@
+@use "../abstracts/variables";
+
+.draggable-component {
+  &.border-begin {
+    border-top: 2px solid variables.$b1;
+
+    &:before {
+      position: absolute;
+      top: 0;
+      left: 0;
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid variables.$b1;
+      border-radius: 50%;
+      background-color: variables.$bg-color;
+      transform: translate(0, -6px);
+      z-index: 10;
+    }
+  }
+
+  &.border-end {
+    border-bottom: 2px solid variables.$b1;
+
+    &:before {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid variables.$b1;
+      border-radius: 50%;
+      background-color: variables.$bg-color;
+      transform: translate(0, 6px);
+      z-index: 10;
+    }
+  }
+
+}

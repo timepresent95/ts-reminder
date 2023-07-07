@@ -1,271 +1,232 @@
 import Schedule from "./Schedule";
-import MouseButton from "../utility/MouseButton";
-import Position from "../utility/Position";
+import DraggableList from "../utility/DraggableList";
+import DraggableComponent from "../utility/DraggableComponent";
 import KeydownEventHandler from "../utility/KeydownEventHandler";
 
-export default class ScheduleList {
-  private readonly currentEl = document.getElementById("schedules");
-  private readonly allCompletedEl = document.getElementById("all-completed");
-  private readonly rightMouseButton: MouseButton = new MouseButton();
-  private readonly keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
-  private editableItem: Schedule | null = null;
-  private editableItemKey: string | null = null;
-  private focusTarget: "input" | "textarea" | null = null;
-  schedules: Schedule[];
-  selectedItemKeys: string[] = [];
+export default class ScheduleList extends DraggableList {
+  private readonly allCompletedEl = document.createElement("p");
+  private readonly mainEl = document.createElement("main");
+  private editItem: Schedule | null = null;
+  private selectedItems: { [key: string]: Schedule } = {};
+  private selectedItemQueue: Schedule[] = [];
+  private keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
   contextSelectedItemKeys: string[] = [];
   eventTargetScheduleKey: string | null = null;
 
-  constructor();
-  constructor(schedules: Schedule[]);
   constructor(schedules?: Schedule[]) {
-    if (!(this.currentEl instanceof HTMLOListElement)) {
-      throw new Error("schedules Element is not exist");
-    }
-    if (this.allCompletedEl === null) {
-      throw new Error("allCompleted Element is not exist");
-    }
-    this.schedules = schedules ?? [];
+    super(document.createElement("ol"), schedules ?? []);
     this.currentEl.classList.add("schedules");
-    this.currentEl.addEventListener("mousedown", this.rightMousedownEvent());
-    this.currentEl.addEventListener("mousemove", this.rightMousemoveEvent());
-    this.currentEl.addEventListener("mouseup", this.rightMouseupEvent);
-    this.currentEl.addEventListener("keydown", this.keydownEvent);
-    this.currentEl.addEventListener("input", this.inputEvent);
+    this.list.forEach((item) => {
+      if (!(item instanceof Schedule)) {
+        throw new Error("this item is not Schedule");
+      }
+      this.currentEl.appendChild(item.create());
+      item.render();
+    });
+
+    this.allCompletedEl.classList.add("all-completed", "my-auto", "text-h2", "text-g3");
+    this.allCompletedEl.textContent = "All Items Completed";
+
+    this.mainEl.classList.add("schedule-list");
+
+    this.enrolledEvent["CREATE_NEW_SCHEDULE"] = this.CREATE_NEW_SCHEDULE;
+    this.enrolledEvent["EDIT"] = this.EDIT;
+    this.enrolledEvent["REMOVE"] = this.REMOVE;
+    this.enrolledEvent["SELECT"] = this.SELECT;
+    this.enrolledEvent["MULTI_SELECT"] = this.MULTI_SELECT;
+    this.enrolledEvent["RANGE_SELECT"] = this.RANGE_SELECT;
+
+    this.currentEl.addEventListener("click", this.clickOutSideHandler);
+    this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
   }
+
+  protected beforeDragStart = () => {
+    this.reset();
+    this.mainEl.removeEventListener("click", this.clickOutSideHandler);
+    this.allCompletedEl.removeEventListener("click", this.clickOutSideHandler);
+  };
+
+  protected afterDragEnd = () => {
+    this.mainEl.addEventListener("click", this.clickOutSideHandler);
+    this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
+  };
+
+  private CREATE_NEW_SCHEDULE = () => {
+    this.createNewSchedule();
+  };
+
+  private EDIT = (item: DraggableComponent) => {
+    if (!(item instanceof Schedule)) {
+      throw new Error("this item is not Schedule");
+    }
+    this.reset();
+    this.editItem = item;
+  };
+
+  private REMOVE = (item: DraggableComponent) => {
+    if (!(item instanceof Schedule)) {
+      throw new Error("this item is not Schedule");
+    }
+    this.editItem = null;
+    this.removeSchedules([item]);
+  };
+
+  private SELECT = (item: DraggableComponent) => {
+    if (!(item instanceof Schedule)) {
+      throw new Error("this item is not Schedule");
+    }
+    this.reset();
+    this.doSelect(item);
+  };
+
+  private MULTI_SELECT = (item: DraggableComponent) => {
+    if (!(item instanceof Schedule)) {
+      throw new Error("this item is not Schedule");
+    }
+    if (item.selected) {
+      this.cancelSelect(item);
+    } else {
+      this.editItem?.endEditMode();
+      this.editItem = null;
+      this.doSelect(item);
+    }
+  };
+
+  private RANGE_SELECT = (item: DraggableComponent) => {
+    const selectedIdx = this.list.findIndex((v) => item.key === v.key);
+    const lastSelectedIdx = this.list.findIndex((v) => this.selectedItemQueue[this.selectedItemQueue.length - 1].key === v.key);
+    const s = Math.min(selectedIdx, lastSelectedIdx);
+    const e = Math.max(selectedIdx, lastSelectedIdx);
+    this.list.slice(s, e + 1)
+      .map(v => v)
+      .forEach(v => {
+        if (!(v instanceof Schedule)) {
+          throw new Error("this item is not Schedule");
+        }
+        this.doSelect(v);
+      });
+  };
+
+  private resetSelect() {
+    this.selectedItemQueue.forEach(v => v.selected = false);
+    this.selectedItemQueue = [];
+    this.selectedItems = {};
+    this.keydownEventHandler.removeEvent();
+  }
+
+  private doSelect(item: Schedule) {
+    this.selectedItems[item.key] = item;
+    this.selectedItemQueue.filter(v => v !== item);
+    this.selectedItemQueue.push(item);
+    item.selected = true;
+    this.keydownEventHandler.setEvent(this.keydown);
+  }
+
+  private keydown = (e: KeyboardEvent) => {
+    if (this.selectedItemQueue.length === 0) {
+      throw new Error("keydown event can not occur when nothing is selected");
+    }
+    const lastSelectedItem = this.selectedItemQueue[this.selectedItemQueue.length - 1];
+    const { head, tail } = this.getSelectedAdjacentRange(lastSelectedItem);
+    let currentCursor = this.list.findIndex(({ key }) => key === lastSelectedItem.key);
+    let nextCursor: number;
+    if (e.code === "Backspace") {
+      return this.removeSchedules(this.selectedItemQueue);
+    }
+    switch (e.code) {
+    case "ArrowDown":
+      nextCursor = Math.min(this.list.length - 1, tail + 1);
+      break;
+    case "ArrowUp":
+      nextCursor = Math.max(0, head - 1);
+      break;
+    default:
+      return;
+    }
+    if(!e.shiftKey) {
+      this.resetSelect();
+      //FIXME: type assertion 제거하기
+      this.doSelect(<Schedule> this.list[nextCursor])
+    } else if (currentCursor !== nextCursor) {
+      this.doSelect(<Schedule> this.list[nextCursor])
+    }
+  };
+
+  private cancelSelect(item: Schedule) {
+    delete this.selectedItems[item.key];
+    this.selectedItemQueue = this.selectedItemQueue.filter(v => v !== item);
+    item.selected = false;
+    if (this.selectedItemQueue.length === 0) {
+      this.keydownEventHandler.removeEvent();
+    }
+  }
+
+  private clickOutSideHandler = (e: MouseEvent) => {
+    if (e.button !== 0 || e.target !== e.currentTarget) {
+      return;
+    }
+    if (this.editItem === null) {
+      this.reset();
+      this.createNewSchedule();
+    } else {
+      this.reset();
+    }
+  };
 
   reset() {
-    this.editableItem = null;
-    this.editableItemKey = null;
-    this.focusTarget = null;
-    this.selectedItemKeys = [];
-    this.contextSelectedItemKeys = [];
-    this.eventTargetScheduleKey = null;
-    this.keydownEventHandler.removeEvent();
-    this.render();
+    this.editItem?.endEditMode();
+    this.editItem = null;
+    this.resetSelect();
   }
 
-  createNewSchedule(toggle: boolean = false) {
-    const preEditableItem = this.editableItem;
+  createNewSchedule() {
     this.reset();
-    if (!toggle || preEditableItem === null) {
-      const newSchedule = new Schedule();
-      this.schedules.push(newSchedule);
-      this.setEditableItem(newSchedule);
-      this.focusTarget = "input";
-    }
-    this.render();
+    const newSchedule = new Schedule();
+    this.append(newSchedule);
+    this.toggleEmptyText();
+    this.currentEl.append(newSchedule.currentEl);
+    newSchedule.startEditMode("input");
+    this.editItem = newSchedule;
   }
 
-  private setEditableItemByKey(scheduleKey: string) {
-    this.editableItem = this.schedules.find((v) => v.key === scheduleKey) ?? null;
-    this.editableItemKey = scheduleKey;
-    this.selectedItemKeys = [];
-    this.contextSelectedItemKeys = [];
+  removeSchedules(targetList: Schedule[]) {
+    targetList.forEach(v => {
+      this.currentEl.removeChild(v.currentEl);
+      this.remove(v);
+    });
+    this.toggleEmptyText();
   }
 
-  private setEditableItem(schedule: Schedule) {
-    this.editableItem = schedule;
-    this.editableItemKey = schedule.key;
-  }
+  // private compareFn = (first: DraggableComponent, second: DraggableComponent) => {
+  //   if (!(first instanceof Schedule) || !(second instanceof Schedule)) {
+  //     throw new Error("this item is not Schedule");
+  //   }
+  //   if (first === this.editItem) {
+  //     return 1;
+  //   }
+  //   if (second === this.editItem) {
+  //     return -1;
+  //   }
+  //   if (first.isCompleted === second.isCompleted) {
+  //     return 0;
+  //   } else {
+  //     return first.isCompleted ? 1 : -1;
+  //   }
+  // };
 
-  resetEditableItemKey() {
-    this.editableItemKey = null;
-    this.editableItem = null;
-  }
 
-  resetSelectedItemKeys() {
-    this.selectedItemKeys = [];
-    this.contextSelectedItemKeys = [];
-  }
-
-  private inputEvent = (e: Event) => {
-    if (this.editableItem === null) {
-      throw new Error("editable item is not exist");
-    }
-
-    const { target } = e;
-    if (target instanceof HTMLInputElement) {
-      this.editableItem.title = target.value;
-    }
-    if (target instanceof HTMLTextAreaElement) {
-      const rowCount = target.value.split("\n").length;
-      target.setAttribute("rows", rowCount.toString());
-      this.editableItem.notes = target.value.trim().replace(/\n/gi, "</br>");
-    }
-  };
-
-  private keydownEvent = (e: KeyboardEvent) => {
-    if (this.editableItem === null) {
-      throw new Error("editable item is not exist");
-    }
-
-    const { target } = e;
-    if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
-      return;
-    }
-    if (this.editableItem.title.trim() === "") {
-      this.focusTarget = null;
-      this.resetEditableItemKey();
-      this.render();
-      return;
-    }
-    this.createNewSchedule();
-    this.render();
-  };
-
-  private rightMouseupEvent = (e: MouseEvent) => {
-    if (e.button !== 0) {
-      return;
-    }
-    const { target } = e;
-
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const scheduleItemEl = target.closest(".schedule-item");
-    if (!(scheduleItemEl instanceof HTMLElement) || scheduleItemEl.dataset.key === undefined) {
-      return;
-    }
-
-    e.stopPropagation();
-
-    if (target.classList.contains("schedule-status")) {
-      this.changeScheduleStatus(scheduleItemEl.dataset.key);
-      if (scheduleItemEl.dataset.key !== this.editableItemKey) {
-        this.resetEditableItemKey();
-      }
-    } else if (target.classList.contains("schedule-title")) {
-      this.setEditableItemByKey(scheduleItemEl.dataset.key);
-      this.focusTarget = "input";
-      e.stopPropagation();
-    } else if (target.classList.contains("schedule-notes")) {
-      this.setEditableItemByKey(scheduleItemEl.dataset.key);
-      this.focusTarget = "textarea";
-      e.stopPropagation();
-    } else if (this.eventTargetScheduleKey !== null && this.rightMouseButton.isDragged) {
-      const position = scheduleItemEl.classList.contains("dragenter-border-back") ? "back" : "front";
-      this.insertItem(this.eventTargetScheduleKey, scheduleItemEl.dataset.key, position);
-    } else {
-      this.keydownEventHandler.setEvent(this.extendSelectedSchedules);
-      this.selectItem(e, scheduleItemEl.dataset.key);
-      this.resetEditableItemKey();
-      e.stopPropagation();
-    }
-    this.eventTargetScheduleKey = null;
-    this.rightMouseButton.release();
-    this.removeDragBorderClass(scheduleItemEl);
-    this.render();
-  };
-
-  private rightMousemoveEvent() {
-    return (e: MouseEvent) => {
-      if (e.button !== 0) {
-        return;
-      }
-      if (this.eventTargetScheduleKey === null) {
-        return;
-      }
-      const { target } = e;
-
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      const scheduleItemEl = target.closest(".schedule-item");
-      if (!(scheduleItemEl instanceof HTMLElement)) {
-        return;
-      }
-      if (this.rightMouseButton.isDragged) {
-        scheduleItemEl.addEventListener("mousemove", this.eventScheduleItemMouseMove);
-        scheduleItemEl.addEventListener("mouseleave", this.eventScheduleItemMouseLeave);
-        return;
-      }
-      this.rightMouseButton.move(new Position(e.clientX, e.clientY));
-    };
-  }
-
-  private rightMousedownEvent() {
-    return (e: MouseEvent) => {
-      if (e.button !== 0) {
-        return;
-      }
-      const { target } = e;
-
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      const scheduleItemEl = target.closest(".schedule-item");
-      if (!(scheduleItemEl instanceof HTMLElement)) {
-        return;
-      }
-      this.eventTargetScheduleKey = scheduleItemEl.dataset.key ?? null;
-      this.rightMouseButton.click(new Position(e.clientX, e.clientY));
-    };
-  }
-
-  private removeDragBorderClass(target: HTMLElement) {
-    target.classList.remove("dragenter-border-front");
-    target.classList.remove("dragenter-border-back");
-  }
-
-  private eventScheduleItemMouseMove = (e: MouseEvent) => {
-    if (e.button !== 0) {
-      return;
-    }
-    const { currentTarget } = e;
-
-    if (!(currentTarget instanceof HTMLElement)) {
-      return;
-    }
-    this.removeDragBorderClass(currentTarget);
-    if (currentTarget.offsetHeight / 2 > e.offsetY) {
-      currentTarget.classList.add("dragenter-border-front");
-    } else {
-      currentTarget.classList.add("dragenter-border-back");
-    }
-  };
-
-  private eventScheduleItemMouseLeave = (e: MouseEvent) => {
-    if (e.button !== 0) {
-      return;
-    }
-    const { currentTarget } = e;
-
-    if (!(currentTarget instanceof HTMLElement)) {
-      return;
-    }
-    currentTarget.removeEventListener("mousemove", this.eventScheduleItemMouseMove);
-    currentTarget.removeEventListener("mouseleave", this.eventScheduleItemMouseLeave);
-    this.removeDragBorderClass(currentTarget);
-  };
-
-  private changeScheduleStatus(key: string) {
-    this.schedules.find((schedule) => schedule.key === key)?.toggleScheduleCompleted();
-  }
-
-  private toggleSelectItem(key: string) {
-    const selectedKeyIdx = this.selectedItemKeys.findIndex((item) => item === key);
-    if (selectedKeyIdx === -1) {
-      this.selectedItemKeys.push(key);
-    } else {
-      this.selectedItemKeys.splice(selectedKeyIdx, 1);
-    }
-  }
-
-  getSelectedAdjacentRange(key: string) {
-    const currentKeyIdx = this.schedules.findIndex((v) => v.key === key);
+  //FIXME: type assertion 제거하기
+  private getSelectedAdjacentRange(source: Schedule) {
+    const currentKeyIdx = this.list.findIndex((v) => v === source);
     let head = currentKeyIdx, tail = currentKeyIdx;
     while (head > 0) {
-      if (!this.selectedItemKeys.includes(this.schedules[head - 1].key)) {
+      if (!this.selectedItemQueue.includes(<Schedule>this.list[head - 1])) {
         break;
       }
       head--;
     }
-    while (tail < this.schedules.length - 1) {
-      if (!this.selectedItemKeys.includes(this.schedules[tail + 1].key)) {
+    while (tail < this.list.length - 1) {
+      if (!this.selectedItemQueue.includes(<Schedule>this.list[tail + 1])) {
         break;
       }
       tail++;
@@ -273,139 +234,35 @@ export default class ScheduleList {
     return { head, tail };
   }
 
-  private insertItem(sourceKey: string, targetKey: string, position: "front" | "back") {
-    const sourceIdx = this.schedules.findIndex((item) => item.key === sourceKey);
-    const source = this.schedules[sourceIdx];
-    this.schedules.splice(sourceIdx, 1);
-    let targetIdx = this.schedules.findIndex((item) => item.key === targetKey);
-    if (position === "back") {
-      targetIdx++;
-    }
-    this.schedules.splice(targetIdx, 0, source);
-  }
+  // private getContextSelectedBorderClass = (key: string, idx: number): string[] => {
+  //   const ret: string[] = [];
+  //   if (!this.contextSelectedItemKeys.includes(key)) {
+  //     return ret;
+  //   }
+  //   ret.push("context-selected");
+  //   if (idx === 0 || !this.contextSelectedItemKeys.includes(this.schedules[idx - 1].key)) {
+  //     ret.push("context-selected-border-top");
+  //   }
+  //   if (idx === this.schedules.length - 1 || !this.contextSelectedItemKeys.includes(this.schedules[idx + 1].key)) {
+  //     ret.push("context-selected-border-bottom");
+  //   }
+  //   return ret;
+  // };
+  //
 
-  private selectItem(e: MouseEvent, key: string) {
-    if (e.metaKey) {
-      this.toggleSelectItem(key);
-    } else if (e.shiftKey) {
-      const selectedKeyIdx = this.schedules.findIndex((item) => item.key === key);
-      const lastSelectedKeyIdx = this.schedules.findIndex((item) => item.key === this.selectedItemKeys[this.selectedItemKeys.length - 1]);
-      const s = Math.min(selectedKeyIdx, lastSelectedKeyIdx), e = Math.max(selectedKeyIdx, lastSelectedKeyIdx);
-      const newSelectedKey = this.schedules.slice(s, e + 1).map(v => v.key);
-      if (s === lastSelectedKeyIdx) {
-        newSelectedKey.reverse();
-      }
-      this.selectedItemKeys.filter(v => !newSelectedKey.includes(v));
-      this.selectedItemKeys.push(...newSelectedKey);
-    } else {
-      this.selectedItemKeys = [key];
+  private toggleEmptyText() {
+    if (this.list.length === 0) {
+      this.mainEl.replaceChildren(this.allCompletedEl);
+      return;
     }
+    this.mainEl.replaceChildren(this.currentEl);
   }
 
   render() {
-    if (this.allCompletedEl === null) {
-      throw new Error("allCompleted Element is not exist");
-    }
-    this.schedules = this.schedules.filter(({
-      title,
-      key
-    }) => this.editableItemKey === key || title.trim() !== "");
-    this.sort();
-    if (this.schedules.length === 0) {
-      this.allCompletedEl.classList.remove("d-none");
-    } else {
-      this.allCompletedEl.classList.add("d-none");
-    }
-    if (!(this.currentEl instanceof HTMLOListElement)) {
-      throw new Error("schedules Element is not exist");
-    }
-    this.currentEl.innerHTML = "";
-    this.schedules
-      .forEach((item, idx) => {
-        if (!(this.currentEl instanceof HTMLOListElement)) {
-          throw new Error("schedules Element is not exist");
-        }
-        this.currentEl.appendChild(item.render({
-          editable: this.editableItemKey === item.key,
-          className: [
-            "schedule-item",
-            this.editableItemKey === item.key ? "editable" : "",
-            this.selectedItemKeys.includes(item.key) ? "selected" : "",
-            ...this.getContextSelectedBorderClass(item.key, idx)
-          ]
-        }));
-      });
-    this.schedules
-      .find((v) => v.key === this.editableItemKey)
-      ?.focus(this.focusTarget);
+    this.toggleEmptyText();
   }
 
-  private sort() {
-    this.schedules.sort((first: Schedule, second: Schedule) => {
-      if (first.title === "") {
-        return 1;
-      }
-      if (second.title === "") {
-        return -1;
-      }
-      if (first.isCompleted === second.isCompleted) {
-        return 0;
-      } else if (first.isCompleted) {
-        return 1;
-      } else {
-        return -1;
-      }
-    });
+  create() {
+    return this.mainEl;
   }
-
-  private getContextSelectedBorderClass = (key: string, idx: number): string[] => {
-    const ret: string[] = [];
-    if (!this.contextSelectedItemKeys.includes(key)) {
-      return ret;
-    }
-    ret.push("context-selected");
-    if (idx === 0 || !this.contextSelectedItemKeys.includes(this.schedules[idx - 1].key)) {
-      ret.push("context-selected-border-top");
-    }
-    if (idx === this.schedules.length - 1 || !this.contextSelectedItemKeys.includes(this.schedules[idx + 1].key)) {
-      ret.push("context-selected-border-bottom");
-    }
-    return ret;
-  };
-
-  deleteSelectedSchedule() {
-    this.schedules = this.schedules.filter(({ key }) => !this.selectedItemKeys.includes(key));
-    this.resetSelectedItemKeys();
-    this.render();
-  }
-
-  private extendSelectedSchedules = (e: KeyboardEvent) => {
-    if (this.selectedItemKeys.length === 0) {
-      return;
-    }
-    const lastSelectedItemKey = this.selectedItemKeys[this.selectedItemKeys.length - 1];
-    let currentCursor = this.schedules.findIndex(({ key }) => key === lastSelectedItemKey);
-    let nextCursor: number;
-    if (e.code === "Backspace") {
-      return this.deleteSelectedSchedule();
-    }
-    const { head, tail } = this.getSelectedAdjacentRange(lastSelectedItemKey);
-    if (e.code === "ArrowDown") {
-      nextCursor = Math.min(this.schedules.length - 1, tail + 1);
-    } else if (e.code === "ArrowUp") {
-      nextCursor = Math.max(0, head - 1);
-    } else {
-      return;
-    }
-    if (e.shiftKey && currentCursor !== nextCursor) {
-      if (this.selectedItemKeys.find((item) => item === this.schedules[nextCursor].key)) {
-        return;
-      }
-      this.selectedItemKeys.push(this.schedules[nextCursor].key);
-    }
-    if (!e.shiftKey) {
-      this.selectedItemKeys = [this.schedules[nextCursor].key];
-    }
-    this.render();
-  };
 }

@@ -1,0 +1,18 @@
+@use "../abstracts/variables";
+
+.schedule-list {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+
+  .schedules {
+    flex-grow: 1;
+  }
+
+  .all-completed {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

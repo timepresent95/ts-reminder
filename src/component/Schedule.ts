@@ -1,65 +1,171 @@
-export default class Schedule {
-  private readonly currentEl = document.createElement("li");
+import DraggableComponent from "../utility/DraggableComponent";
+
+export default class Schedule extends DraggableComponent {
+  get selected(): boolean {
+    return this._selected;
+  }
+
+  set selected(value: boolean) {
+    if (value) {
+      this.currentEl.classList.add("selected");
+    } else {
+      this.currentEl.classList.remove("selected");
+    }
+    this._selected = value;
+  }
+
+  private focusEl: "input" | "textarea" | null = null;
+  private editMode = false;
+  private _selected = false;
   title: string;
   notes: string;
   isCompleted: boolean;
-  key: string;
 
   constructor();
   constructor(title: string, notes: string);
   constructor(title: string, notes: string, isCompleted: boolean);
   constructor(title?: string, notes?: string, isCompleted?: boolean) {
+    super(document.createElement("li"));
     this.title = title ?? "";
     this.notes = notes ?? "";
-    this.key = this.createRandomKey();
     this.isCompleted = isCompleted ?? false;
+    this.draggableQuery = [".schedule-content"];
+    this.currentEl.addEventListener("click", this.click);
+    this.currentEl.classList.add("schedule-item");
   }
 
-  private createRandomKey(): string {
-    return (Math.random() + 1).toString(36).substring(7) + Date.now();
-  }
-
-  toggleScheduleCompleted() {
-    this.isCompleted = !this.isCompleted;
-  }
-
-  focus(focusTarget: "input" | "textarea" | null) {
-    if (focusTarget === null) {
+  private click = (e: MouseEvent) => {
+    if (e.button !== 0) {
       return;
     }
-    const target = this.currentEl.querySelector(focusTarget);
-    if(target === null) {
+
+    const { target } = e;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (this.emit === null) {
+      throw new Error("Component is not linked");
+    }
+    if (target.classList.contains("schedule-status")) {
+      this.isCompleted = !this.isCompleted;
+      this.render();
+    } else if (e.metaKey) {
+      this.emit("MULTI_SELECT", this);
+    } else if (e.shiftKey) {
+      this.emit("RANGE_SELECT", this);
+    } else if (target.classList.contains("schedule-title")) {
+      this.startEditMode("input");
+    } else if (target.classList.contains("schedule-notes")) {
+      this.startEditMode("textarea");
+    } else if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
+      this.endEditMode();
+      this.emit("SELECT", this);
+    }
+  };
+
+  private keydownEvent = (e: KeyboardEvent) => {
+    if (!this.editMode) {
+      throw new Error("editable item is not exist");
+    }
+
+    const { target } = e;
+    if (!(target instanceof HTMLInputElement) || e.code !== "Enter") {
+      return;
+    }
+
+    if (this.emit === null) {
+      throw new Error("Component is not linked");
+    }
+
+    this.endEditMode();
+    if (this.title !== "") {
+      this.emit("CREATE_NEW_SCHEDULE", this);
+    }
+  };
+
+  private inputEvent = (e: Event) => {
+    const { target } = e;
+    if (target instanceof HTMLInputElement) {
+      this.title = target.value;
+    }
+    if (target instanceof HTMLTextAreaElement) {
+      const rowCount = target.value.split("\n").length;
+      target.setAttribute("rows", rowCount.toString());
+      this.notes = target.value.trim().replace(/\n/gi, "</br>");
+    }
+  };
+
+  startEditMode(focusEl: "input" | "textarea") {
+    if (this.emit === null) {
+      throw new Error("Component is not linked");
+    }
+    this.focusEl = focusEl;
+    this.editMode = true;
+    this.emit("EDIT", this);
+    this.currentEl.addEventListener("keydown", this.keydownEvent);
+    this.currentEl.addEventListener("input", this.inputEvent);
+    this.render();
+  }
+
+  endEditMode = () => {
+    this.focusEl = null;
+    this.editMode = false;
+    this.currentEl.removeEventListener("keydown", this.keydownEvent);
+    this.currentEl.removeEventListener("input", this.inputEvent);
+
+    if (this.emit === null) {
+      throw new Error("Component is not linked");
+    }
+
+    if (this.title === "") {
+      this.emit("REMOVE", this);
+      return;
+    }
+    this.render();
+  };
+
+  focus() {
+    if (this.focusEl === null) {
+      return;
+    }
+
+    const target = this.currentEl.querySelector(this.focusEl);
+    if (target === null) {
       return;
     }
     target.focus();
     target.selectionStart = target.value.length;
   }
 
-  private setClassName(className: string[]) {
-    this.currentEl.classList.add(...className.filter(v => v.trim() !== ""));
-    this.currentEl.classList.remove(...Array.from(this.currentEl.classList).filter(v => !className.includes(v)))
-  }
-
-  render(props: { editable: boolean, className: string[] }) {
-    const { title, notes, isCompleted, key } = this;
+  render(): void {
+    const { title, notes, isCompleted, editMode } = this;
     const notesValue = notes.trim().replace(/<\/br>/gi, "\n");
-    this.currentEl.dataset.key = key;
-    this.setClassName(props.className)
-    if (props.editable) {
+    if (isCompleted) {
+      this.currentEl.classList.add("schedule-item-complete");
+    } else {
+      this.currentEl.classList.remove("schedule-item-complete");
+    }
+    if (editMode) {
       this.currentEl.innerHTML = `
-        <button class="schedule-status ${isCompleted ? "schedule-status-complete" : ""}"></button>
+        <button class="schedule-status editable"></button>
         <div class="schedule-content">
-          <input class="schedule-title text-body1" value="${title}"/>
-          <textarea class="schedule-notes text-body1 text-g1" placeholder="Notes" rows="${notes.split("</br>").length}">${notesValue}</textarea>
+          <input class="text-body1" value="${title}"/>
+          <textarea class="text-body1 text-g1" placeholder="Notes" rows="${notes.split("</br>").length}">${notesValue}</textarea>
         </div>`.trim();
     } else {
       this.currentEl.innerHTML = `
-      <button class="schedule-status ${isCompleted ? "schedule-status-complete" : ""}"></button>
+      <button class="schedule-status"></button>
       <div class="schedule-content">
         <p class="schedule-title text-body1">${title}</p>
         ${notes === "" ? "" : "<p class=\"schedule-notes text-body1 text-g1\">" + notes + "</p>"}
       </div>`.trim();
     }
+    this.focus();
+    this.focusEl = null;
+  }
+
+  create() {
     return this.currentEl;
   }
 }

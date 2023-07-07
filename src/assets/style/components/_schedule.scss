@@ -6,58 +6,62 @@
   margin-left: 10px;
   position: relative;
 
-  &.editable {
-    display: flex;
-
-    input, textarea {
-      display: block;
-      border: none;
-      background-color: transparent;
-      width: 70%;
-    }
-
-    textarea {
-      resize: none;
-      overflow-y: hidden;
-    }
-
+  input, textarea {
+    display: block;
+    border: none;
+    background-color: transparent;
+    width: 70%;
   }
 
-  &.dragenter-border-front {
-    border-top: 2px solid variables.$b1;
+  textarea {
+    resize: none;
+    overflow-y: hidden;
+  }
 
-    &:before {
-      position: absolute;
-      top: 0;
-      left: 0;
-      content: '';
-      width: 10px;
-      height: 10px;
-      border: 2px solid variables.$b1;
-      border-radius: 50%;
-      background-color: variables.$bg-color;
-      transform: translate(0, -6px);
-      z-index: 10;
+  .schedule-status {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border: solid 1px variables.$g3;
+    border-radius: 50%;
+    position: relative;
+    margin: 8px 0 8px 10px;
+  }
+
+  .schedule-content {
+    width: 100%;
+    padding: 8px 20px 8px 0;
+    margin-left: 16px;
+    border-bottom: solid 1px variables.$g4;
+  }
+
+  .schedule-title, .schedule-notes {
+    cursor: text;
+    width: max-content;
+  }
+
+  &-complete {
+    .schedule-status {
+      border-color: variables.$today;
+
+      &:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: variables.$today;
+      }
+    }
+
+    .schedule-title{
+      color: variables.$g1;
     }
   }
 
-  &.dragenter-border-back {
-    border-bottom: 2px solid variables.$b1;
-
-    &:before {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      content: '';
-      width: 10px;
-      height: 10px;
-      border: 2px solid variables.$b1;
-      border-radius: 50%;
-      background-color: variables.$bg-color;
-      transform: translate(0, 6px);
-      z-index: 10;
-    }
-  }
 
   &.selected {
     background-color: variables.$g4;
@@ -88,46 +92,6 @@
 
     &-border-bottom {
       border-bottom: 3px solid;
-    }
-  }
-
-
-  .schedule-content {
-    width: 100%;
-    padding: 8px 20px 8px 0;
-    margin-left: 16px;
-    border-bottom: solid 1px variables.$g4;
-  }
-
-  .schedule-title, .schedule-notes {
-    cursor: text;
-    width: max-content;
-  }
-}
-
-.schedule-status {
-  display: block;
-  width: 18px;
-  height: 18px;
-  border: solid 1px variables.$g3;
-  border-radius: 50%;
-  position: relative;
-  margin: 8px 0 8px 10px;
-
-
-  &-complete {
-    border-color: variables.$today;
-
-    &:after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: variables.$today;
     }
   }
 }
