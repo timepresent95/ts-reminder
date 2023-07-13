@@ -3,7 +3,7 @@
 .schedule-item {
   display: flex;
   align-items: flex-start;
-  margin-left: 10px;
+  padding-left: 10px;
   position: relative;
 
   input, textarea {
@@ -57,7 +57,7 @@
       }
     }
 
-    .schedule-title{
+    .schedule-title {
       color: variables.$g1;
     }
   }
@@ -68,30 +68,28 @@
   }
 
   &.context-selected {
-    border-color: variables.$b1;
-    border-left: 3px solid;
-    border-right: 3px solid;
+    border-left: 3px solid variables.$b1;
+    border-right: 3px solid variables.$b1;
 
     &-border-top {
-      border-top: 3px solid;
+      border-top: 3px solid variables.$b1;
     }
 
     &-border-bottom {
-      border-bottom: 3px solid;
+      border-bottom: 3px solid variables.$b1;
     }
   }
 
   &.selected.context-selected {
-    border-color: variables.$w1;
-    border-left: 3px solid;
-    border-right: 3px solid;
+    border-left: 3px solid variables.$w1;
+    border-right: 3px solid variables.$w1;
 
     &-border-top {
-      border-top: 3px solid;
+      border-top: 3px solid variables.$w1;
     }
 
     &-border-bottom {
-      border-bottom: 3px solid;
+      border-bottom: 3px solid variables.$w1;
     }
   }
 }

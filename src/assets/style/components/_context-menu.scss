@@ -6,6 +6,15 @@
   background-color: variables.$g5;
   border: 1px solid variables.$g3;
   border-radius: 5px;
+  z-index: 4;
+
+  &-wrapper {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: transparent;
+    z-index: 2;
+  }
 
   &-item {
     cursor: pointer;

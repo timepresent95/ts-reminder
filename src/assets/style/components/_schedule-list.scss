@@ -2,6 +2,8 @@
 
 .schedule-list {
   display: flex;
+  position: relative;
+  z-index: 3;
   flex-grow: 1;
   flex-direction: column;
 

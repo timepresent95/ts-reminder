@@ -12,7 +12,7 @@ export default class ScheduleList extends DraggableList {
   private editItem: Schedule | null = null;
   private selectedItems: { [key: string]: Schedule } = {};
   private selectedItemQueue: Schedule[] = [];
-  private contextSelectedItems: { [key: string]: Schedule } = {};
+  private contextSelectedItems: Schedule[] = [];
   private keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
   private contextMenu: ContextMenu = ContextMenu.getInstance();
   private renderingEl: HTMLElement;
@@ -47,6 +47,7 @@ export default class ScheduleList extends DraggableList {
     this.enrolledEvent["SELECT"] = this.SELECT;
     this.enrolledEvent["MULTI_SELECT"] = this.MULTI_SELECT;
     this.enrolledEvent["RANGE_SELECT"] = this.RANGE_SELECT;
+    this.enrolledEvent["CONTEXT_MENU"] = this.CONTEXT_MENU;
 
     this.currentEl.addEventListener("click", this.clickOutSideHandler);
     this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
@@ -86,6 +87,11 @@ export default class ScheduleList extends DraggableList {
   };
 
   private SELECT = (item: DraggableComponent) => {
+    if (this.contextMenu.isDisplayed) {
+      this.contextMenu.hide();
+      this.keydownEventHandler.setEvent(this.keydown);
+      return;
+    }
     if (!(item instanceof Schedule)) {
       throw new Error("this item is not Schedule");
     }
@@ -142,6 +148,30 @@ export default class ScheduleList extends DraggableList {
     }
   };
 
+  private CONTEXT_MENU = (item: DraggableComponent) => {
+    if (!(item instanceof Schedule)) {
+      throw new Error("this item is not Schedule");
+    }
+    this.resetContextSelectedBorder();
+    if (this.selectedItems[item.key]) {
+      this.contextSelectedItems = [...this.selectedItemQueue];
+      this.contextSelectedItems.forEach(v => {
+        v.currentEl.classList.add("context-selected");
+        if (v.prev === null || this.selectedItems[v.prev.key] === undefined) {
+          v.currentEl.classList.add("context-selected-border-top");
+        }
+        if (v.next === null || this.selectedItems[v.next.key] === undefined) {
+          v.currentEl.classList.add("context-selected-border-bottom");
+        }
+      });
+    } else {
+      this.contextSelectedItems = [item];
+      item.currentEl.classList.add("context-selected");
+      item.currentEl.classList.add("context-selected-border-top");
+      item.currentEl.classList.add("context-selected-border-bottom");
+    }
+  };
+
   private rangeSelect(begin: DraggableComponent, end: DraggableComponent) {
     let cursor: DraggableComponent | null = begin;
     while (true) {
@@ -149,7 +179,7 @@ export default class ScheduleList extends DraggableList {
         throw new Error("this item is not Schedule");
       }
       this.doSelect(cursor);
-      if(cursor === end) {
+      if (cursor === end) {
         break;
       }
       cursor = cursor.next;
@@ -172,13 +202,38 @@ export default class ScheduleList extends DraggableList {
   }
 
   private contextmenuHandler = (e: MouseEvent) => {
-    this.contextMenu.show(new Position(e.clientX, e.clientY), [{
+    if (e.target === this.renderingEl) {
+      this.resetContextSelectedBorder();
+    }
+
+    const deleteMenu = {
       title: "Delete",
       key: createRandomKey(),
-      disable: false,
-      func: this.removeSelectedSchedule
-    }], { Backspace: this.removeSelectedSchedule }, this.renderingEl);
-    // TODO: 선택 값들 border 표시 변경
+      disable: this.contextSelectedItems.length === 0 && this.selectedItemQueue.length === 0 && this.editItem === null,
+      func: this.contextMenuDelete
+    };
+    this.contextMenu.show(new Position(e.clientX, e.clientY), [deleteMenu]
+      , { Backspace: this.removeSelectedSchedule }
+      , this.resetContextSelectedBorder);
+  };
+
+  private resetContextSelectedBorder = () => {
+    this.contextSelectedItems.forEach(v => {
+      v.currentEl.classList.remove("context-selected");
+      v.currentEl.classList.remove("context-selected-border-top");
+      v.currentEl.classList.remove("context-selected-border-bottom");
+    });
+  };
+
+  private contextMenuDelete = () => {
+    if (this.contextSelectedItems.length > 0) {
+      this.removeSchedules(this.contextSelectedItems);
+      this.resetSelect();
+    } else if (this.selectedItemQueue.length > 0) {
+      this.removeSelectedSchedule();
+    } else if (this.editItem !== null) {
+      this.removeSchedules([this.editItem]);
+    }
   };
 
   private keydown = (e: KeyboardEvent) => {
@@ -222,6 +277,11 @@ export default class ScheduleList extends DraggableList {
 
   private clickOutSideHandler = (e: MouseEvent) => {
     if (e.button !== 0 || e.target !== e.currentTarget) {
+      return;
+    }
+    if (this.contextMenu.isDisplayed) {
+      this.contextMenu.hide();
+      this.keydownEventHandler.setEvent(this.keydown);
       return;
     }
     if (this.editItem === null) {

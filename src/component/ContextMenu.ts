@@ -2,19 +2,31 @@ import KeydownEventHandler from "../utility/KeydownEventHandler";
 import Position from "../utility/Position";
 
 export default class ContextMenu {
+  get isDisplayed(): boolean {
+    return this._isDisplayed;
+  }
+
   private static instance: ContextMenu;
   private keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
+  private wrapperEl = document.createElement("div");
   private currentEl = document.createElement("ul");
   private menuEls: HTMLLIElement[] = [];
-  private parentEl: HTMLElement = document.body;
   private list: Menu[] = [];
   private menuKeys: { [index: string]: Menu } = {};
   private hoverItemEl: HTMLLIElement | null = null;
   private mutationObserver: MutationObserver | null = null;
   private keydownCustom: KeydownCustom = {};
+  private _isDisplayed = false;
+  private beforeHide: () => void = () => {
+  };
 
   private constructor() {
-    this.currentEl.classList.add("context-menu", "text-body1");
+    this.wrapperEl.classList.add("context-menu-wrapper", "d-none");
+    this.wrapperEl.addEventListener("mousedown", () => {
+      this.hide();
+    });
+    this.currentEl.classList.add("context-menu", "text-body1", "d-none");
+    document.body.append(this.wrapperEl, this.currentEl);
   }
 
   static getInstance() {
@@ -24,9 +36,10 @@ export default class ContextMenu {
     return ContextMenu.instance;
   }
 
-  show = (position: Position, list: Menu[], keydownCustom: KeydownCustom, parentEl?: HTMLElement) => {
+  show = (position: Position, list: Menu[], keydownCustom: KeydownCustom, beforeHide: () => void) => {
     this.keydownCustom = keydownCustom;
     this.mutationObserver?.disconnect();
+    this.beforeHide = beforeHide;
     this.mutationObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.target === this.currentEl) {
@@ -37,8 +50,6 @@ export default class ContextMenu {
       }
     });
     this.mutationObserver.observe(this.currentEl, { childList: true });
-    this.parentEl = parentEl ?? document.body;
-    this.parentEl.appendChild(this.currentEl);
     this.list = list;
     this.menuEls = this.list.map(({ title, key, func, disable }, idx) => {
       const ret = document.createElement("li");
@@ -57,13 +68,16 @@ export default class ContextMenu {
     this.currentEl.addEventListener("click", this.click);
     this.currentEl.addEventListener("mousemove", this.mousemove);
     this.currentEl.addEventListener("mouseleave", this.mouseleave);
+    this.wrapperEl.classList.remove("d-none");
+    this.currentEl.classList.remove("d-none");
+    this._isDisplayed = true;
   };
 
   hide = () => {
+    this.beforeHide();
     this.keydownCustom = {};
     this.mutationObserver?.disconnect();
     this.mutationObserver = null;
-    this.parentEl.removeChild(this.currentEl);
     this.list = [];
     this.menuEls = [];
     this.currentEl.innerHTML = "";
@@ -71,13 +85,16 @@ export default class ContextMenu {
     this.currentEl.removeEventListener("click", this.click);
     this.currentEl.removeEventListener("mousemove", this.mousemove);
     this.currentEl.removeEventListener("mouseleave", this.mouseleave);
+    this.wrapperEl.classList.add("d-none");
+    this.currentEl.classList.add("d-none");
+    this._isDisplayed = false;
   };
 
   private normalizePosition(position: Position) {
     const width = this.currentEl.offsetWidth;
     const height = this.currentEl.offsetHeight;
-    const outOfBoundsOnX = position.x + width > this.parentEl.offsetWidth;
-    const outOfBoundsOnY = position.y + height > this.parentEl.offsetHeight;
+    const outOfBoundsOnX = position.x + width > document.body.offsetWidth;
+    const outOfBoundsOnY = position.y + height > document.body.offsetHeight;
     let normalizedX = position.x;
     let normalizedY = position.y;
 
@@ -96,6 +113,7 @@ export default class ContextMenu {
   private keydown = (e: KeyboardEvent) => {
     if (this.keydownCustom[e.code]) {
       this.keydownCustom[e.code]();
+      this.hide();
       return;
     }
   };

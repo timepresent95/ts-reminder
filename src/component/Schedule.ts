@@ -31,7 +31,16 @@ export default class Schedule extends DraggableComponent {
     this.isCompleted = isCompleted ?? false;
     this.draggableQuery = [".schedule-content"];
     this.currentEl.addEventListener("click", this.click);
+    this.currentEl.addEventListener("contextmenu", this.contextmenu);
     this.currentEl.classList.add("schedule-item");
+  }
+
+  private contextmenu = () => {
+    if (this.emit === null) {
+      throw new Error("Component is not linked");
+    }
+
+    this.emit("CONTEXT_MENU", this);
   }
 
   private click = (e: MouseEvent) => {
