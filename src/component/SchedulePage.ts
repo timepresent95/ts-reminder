@@ -1,11 +1,10 @@
 import ScheduleList from "./ScheduleList";
-import ContextMenu from "./ContextMenu";
 
 export default class SchedulePage {
   private readonly headerEl = document.createElement("header");
   private readonly addButtonEl = document.createElement("button");
   private readonly titleEl = document.createElement("h1");
-  // private readonly contextMenu: ContextMenu;
+  private readonly currentEl = document.createElement("section");
   private readonly scheduleList: ScheduleList;
 
   constructor(title: string) {
@@ -15,8 +14,9 @@ export default class SchedulePage {
     this.titleEl.classList.add(`text-${title}`, "text-h1b");
     this.titleEl.textContent = title.proper() ?? "";
     this.headerEl.classList.add("p-20");
-
-    // this.contextMenu = new ContextMenu(this.eventBus);
+    this.headerEl.appendChild(this.addButtonEl);
+    this.headerEl.appendChild(this.titleEl);
+    this.currentEl.classList.add("schedule-page");
 
     this.addButtonEl.addEventListener("click", (e: MouseEvent) => {
       if (e.button !== 0) {
@@ -25,7 +25,6 @@ export default class SchedulePage {
       this.scheduleList.createNewSchedule();
     });
 
-    // this.mainEl.addEventListener("contextmenu", this.contextMenuEvent);
   }
 
   render() {
@@ -33,47 +32,8 @@ export default class SchedulePage {
   }
 
   create() {
-    this.headerEl.appendChild(this.addButtonEl);
-    this.headerEl.appendChild(this.titleEl);
-    const mainEl = this.scheduleList.create();
-    return [this.headerEl, mainEl];
+    this.currentEl.appendChild(this.headerEl);
+    this.currentEl.appendChild(this.scheduleList.create());
+    return this.currentEl;
   }
-
-  // private eventBus = (action: string) => {
-  //   switch (action) {
-  //   case "DELETE_CONTEXT_MENU":
-  //     this.scheduleList.deleteSelectedSchedule();
-  //     break;
-  //   default:
-  //     throw new Error("The action is not enrolled");
-  //   }
-  // };
-
-  // private contextMenuEvent = (e: MouseEvent) => {
-  //   e.preventDefault();
-  //   const { target } = e;
-  //
-  //   if (!(target instanceof HTMLElement)) {
-  //     return;
-  //   }
-  //
-  //   const scheduleItemEl = target.closest(".schedule-item");
-  //
-  //   if (!(scheduleItemEl instanceof HTMLElement)) {
-  //     this.scheduleList.reset();
-  //     return;
-  //   }
-  //   const currentKey = scheduleItemEl.dataset.key;
-  //   if (currentKey === undefined) {
-  //     return;
-  //   }
-  //
-  //   if (this.scheduleList.selectedItemKeys.includes(currentKey)) {
-  //     this.scheduleList.contextSelectedItemKeys = this.scheduleList.selectedItemKeys;
-  //   } else {
-  //     this.scheduleList.contextSelectedItemKeys = [currentKey];
-  //   }
-  //   this.scheduleList.render();
-  //   this.contextMenu.show(new Position(e.clientX, e.clientY));
-  // };
 }

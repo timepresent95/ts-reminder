@@ -17,9 +17,9 @@ export default class KeydownEventHandler {
   }
 
   removeEvent() {
+    window.removeEventListener("keydown", this.eventHandler);
     this.eventHandler = () => {
     };
-    window.removeEventListener("keydown", this.eventHandler);
   }
 
   static getInstance() {

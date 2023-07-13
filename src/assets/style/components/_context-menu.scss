@@ -2,27 +2,23 @@
 
 .context-menu {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 10000;
-  background-color: transparent;
-
-  &-list {
-    position: fixed;
-    width: 150px;
-    background-color: variables.$g5;
-    border: 1px solid variables.$g3;
-    border-radius: 5px;
-  }
+  width: 150px;
+  background-color: variables.$g5;
+  border: 1px solid variables.$g3;
+  border-radius: 5px;
 
   &-item {
     cursor: pointer;
     border-radius: 5px;
 
-    &:hover {
+    &-hover {
       background-color: variables.$b1;
+    }
+
+    &-disable {
+      background-color: variables.$g5;
+      color: variables.$g1;
+      cursor: initial;
     }
   }
 }

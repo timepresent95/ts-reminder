@@ -27,8 +27,10 @@ body {
   font-family: variables.$font-family;
   color: variables.$w1;
   line-height: 1.5;
-  display: flex;
-  flex-direction: column;
+}
+
+main {
+  position: relative;
 }
 
 button {

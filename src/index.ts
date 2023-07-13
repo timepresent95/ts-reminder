@@ -8,9 +8,8 @@ String.prototype.proper = function() {
 function init() {
   window.addEventListener("contextmenu", (e) => e.preventDefault());
   const schedulePage = new SchedulePage('today');
-  const [headerEl, mainEl] = schedulePage.create();
-  document.body.appendChild(headerEl)
-  document.body.appendChild(mainEl);
+  const schedulePageEl = schedulePage.create();
+  document.body.appendChild(schedulePageEl)
   schedulePage.render()
 }
 

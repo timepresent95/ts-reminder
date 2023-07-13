@@ -1,7 +1,10 @@
 import Schedule from "./Schedule";
-import DraggableList from "../utility/DraggableList";
-import DraggableComponent from "../utility/DraggableComponent";
+import DraggableList from "./DraggableList";
+import DraggableComponent from "./DraggableComponent";
 import KeydownEventHandler from "../utility/KeydownEventHandler";
+import Position from "../utility/Position";
+import { createRandomKey } from "../utility/Random";
+import ContextMenu from "./ContextMenu";
 
 export default class ScheduleList extends DraggableList {
   private readonly allCompletedEl = document.createElement("p");
@@ -10,8 +13,8 @@ export default class ScheduleList extends DraggableList {
   private selectedItems: { [key: string]: Schedule } = {};
   private selectedItemQueue: Schedule[] = [];
   private keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
-  contextSelectedItemKeys: string[] = [];
-  eventTargetScheduleKey: string | null = null;
+  private contextMenu: ContextMenu = ContextMenu.getInstance();
+  private renderingEl: HTMLElement;
 
   constructor(schedules?: Schedule[]) {
     super(document.createElement("ol"), schedules ?? []);
@@ -23,6 +26,14 @@ export default class ScheduleList extends DraggableList {
       this.currentEl.appendChild(item.create());
       item.render();
     });
+    if (this.list.length === 0) {
+      this.renderingEl = this.allCompletedEl;
+      this.mainEl.appendChild(this.allCompletedEl);
+    } else {
+      this.renderingEl = this.currentEl;
+      this.mainEl.appendChild(this.currentEl);
+    }
+
 
     this.allCompletedEl.classList.add("all-completed", "my-auto", "text-h2", "text-g3");
     this.allCompletedEl.textContent = "All Items Completed";
@@ -38,6 +49,9 @@ export default class ScheduleList extends DraggableList {
 
     this.currentEl.addEventListener("click", this.clickOutSideHandler);
     this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
+
+    this.allCompletedEl.addEventListener("contextmenu", this.contextmenuHandler);
+    this.currentEl.addEventListener("contextmenu", this.contextmenuHandler);
   }
 
   protected beforeDragStart = () => {
@@ -116,11 +130,21 @@ export default class ScheduleList extends DraggableList {
 
   private doSelect(item: Schedule) {
     this.selectedItems[item.key] = item;
-    this.selectedItemQueue.filter(v => v !== item);
+    this.selectedItemQueue = this.selectedItemQueue.filter(v => v !== item);
     this.selectedItemQueue.push(item);
     item.selected = true;
     this.keydownEventHandler.setEvent(this.keydown);
   }
+
+  private contextmenuHandler = (e: MouseEvent) => {
+    this.contextMenu.show(new Position(e.clientX, e.clientY), [{
+      title: "Delete",
+      key: createRandomKey(),
+      disable: this.selectedItemQueue.length === 0,
+      func: this.removeSelectedSchedule
+    }], { Backspace: this.removeSelectedSchedule }, this.renderingEl);
+    // TODO: 선택 값들 border 표시 변경
+  };
 
   private keydown = (e: KeyboardEvent) => {
     if (this.selectedItemQueue.length === 0) {
@@ -131,7 +155,7 @@ export default class ScheduleList extends DraggableList {
     let currentCursor = this.list.findIndex(({ key }) => key === lastSelectedItem.key);
     let nextCursor: number;
     if (e.code === "Backspace") {
-      return this.removeSchedules(this.selectedItemQueue);
+      return this.removeSelectedSchedule();
     }
     switch (e.code) {
     case "ArrowDown":
@@ -143,12 +167,12 @@ export default class ScheduleList extends DraggableList {
     default:
       return;
     }
-    if(!e.shiftKey) {
+    if (!e.shiftKey) {
       this.resetSelect();
       //FIXME: type assertion 제거하기
-      this.doSelect(<Schedule> this.list[nextCursor])
+      this.doSelect(<Schedule>this.list[nextCursor]);
     } else if (currentCursor !== nextCursor) {
-      this.doSelect(<Schedule> this.list[nextCursor])
+      this.doSelect(<Schedule>this.list[nextCursor]);
     }
   };
 
@@ -189,13 +213,18 @@ export default class ScheduleList extends DraggableList {
     this.editItem = newSchedule;
   }
 
-  removeSchedules(targetList: Schedule[]) {
+  private removeSelectedSchedule = () => {
+    this.removeSchedules(this.selectedItemQueue);
+    this.resetSelect();
+  };
+
+  private removeSchedules = (targetList: Schedule[]) => {
     targetList.forEach(v => {
       this.currentEl.removeChild(v.currentEl);
       this.remove(v);
     });
     this.toggleEmptyText();
-  }
+  };
 
   // private compareFn = (first: DraggableComponent, second: DraggableComponent) => {
   //   if (!(first instanceof Schedule) || !(second instanceof Schedule)) {
@@ -248,14 +277,16 @@ export default class ScheduleList extends DraggableList {
   //   }
   //   return ret;
   // };
-  //
 
   private toggleEmptyText() {
-    if (this.list.length === 0) {
-      this.mainEl.replaceChildren(this.allCompletedEl);
-      return;
+    if (this.list.length === 0 && this.renderingEl === this.currentEl) {
+      this.mainEl.replaceChild(this.allCompletedEl, this.currentEl);
+      this.renderingEl = this.allCompletedEl;
     }
-    this.mainEl.replaceChildren(this.currentEl);
+    if (this.list.length > 0 && this.renderingEl === this.allCompletedEl) {
+      this.mainEl.replaceChild(this.currentEl, this.allCompletedEl);
+      this.renderingEl = this.currentEl;
+    }
   }
 
   render() {

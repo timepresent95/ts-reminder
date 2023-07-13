@@ -1,4 +1,4 @@
-import DraggableComponent from "../utility/DraggableComponent";
+import DraggableComponent from "./DraggableComponent";
 
 export default class Schedule extends DraggableComponent {
   get selected(): boolean {
@@ -38,7 +38,6 @@ export default class Schedule extends DraggableComponent {
     if (e.button !== 0) {
       return;
     }
-
     const { target } = e;
     if (!(target instanceof HTMLElement)) {
       return;

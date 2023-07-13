@@ -1,4 +1,5 @@
-import Position from "./Position";
+import Position from "../utility/Position";
+import { createRandomKey } from "../utility/Random";
 
 export default class DraggableComponent {
   private readonly dragSensitivity: number;
@@ -18,12 +19,8 @@ export default class DraggableComponent {
     this.dragSensitivity = dragSensitivity ?? 3;
     currentEl.classList.add("draggable-component");
     currentEl.addEventListener("mousedown", this.mousedown);
-    this.key = this.createRandomKey();
+    this.key = createRandomKey();
     this.currentEl.dataset.key = this.key;
-  }
-
-  private createRandomKey(): string {
-    return (Math.random() + 1).toString(36).substring(7) + Date.now();
   }
 
   reset = () => {
