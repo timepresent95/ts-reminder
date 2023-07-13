@@ -7,6 +7,8 @@ export default class DraggableComponent {
   private clickedPosition: Position | null = null;
   private prevPosition: Position | null = null;
   private dragDistance: number = 0;
+  prev: DraggableComponent | null = null;
+  next: DraggableComponent | null = null;
   protected draggableQuery: string[] = [];
   protected emit: null | EventPipe = null;
   readonly currentEl: HTMLElement;

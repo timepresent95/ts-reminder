@@ -24,7 +24,6 @@ export default class SchedulePage {
       }
       this.scheduleList.createNewSchedule();
     });
-
   }
 
   render() {

@@ -12,6 +12,7 @@ export default class ScheduleList extends DraggableList {
   private editItem: Schedule | null = null;
   private selectedItems: { [key: string]: Schedule } = {};
   private selectedItemQueue: Schedule[] = [];
+  private contextSelectedItems: { [key: string]: Schedule } = {};
   private keydownEventHandler: KeydownEventHandler = KeydownEventHandler.getInstance();
   private contextMenu: ContextMenu = ContextMenu.getInstance();
   private renderingEl: HTMLElement;
@@ -50,7 +51,6 @@ export default class ScheduleList extends DraggableList {
     this.currentEl.addEventListener("click", this.clickOutSideHandler);
     this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
 
-    this.allCompletedEl.addEventListener("contextmenu", this.contextmenuHandler);
     this.currentEl.addEventListener("contextmenu", this.contextmenuHandler);
   }
 
@@ -106,20 +106,55 @@ export default class ScheduleList extends DraggableList {
     }
   };
 
+  //FIXME: type assertion 제거하기
   private RANGE_SELECT = (item: DraggableComponent) => {
-    const selectedIdx = this.list.findIndex((v) => item.key === v.key);
-    const lastSelectedIdx = this.list.findIndex((v) => this.selectedItemQueue[this.selectedItemQueue.length - 1].key === v.key);
-    const s = Math.min(selectedIdx, lastSelectedIdx);
-    const e = Math.max(selectedIdx, lastSelectedIdx);
-    this.list.slice(s, e + 1)
-      .map(v => v)
-      .forEach(v => {
-        if (!(v instanceof Schedule)) {
-          throw new Error("this item is not Schedule");
-        }
-        this.doSelect(v);
-      });
+    if (this.selectedItemQueue.length === 0) {
+      const firstEl = this.currentEl.firstElementChild;
+      if (!(firstEl instanceof HTMLElement)) {
+        throw new Error("schedule list children must be HTMLElement");
+      }
+      const key = firstEl.dataset.key;
+      if (key === undefined || !(this.componentKeys[key] instanceof DraggableComponent)) {
+        throw new Error("schedule list children has wrong data-key value");
+      }
+      this.rangeSelect(this.componentKeys[key], item);
+      return;
+    }
+
+    let prevCursor: DraggableComponent | null = item;
+    let nextCursor: DraggableComponent | null = item;
+    let endPoint = this.selectedItemQueue[this.selectedItemQueue.length - 1];
+    while (true) {
+      if (prevCursor === endPoint) {
+        this.rangeSelect(endPoint, item);
+        break;
+      }
+      if (nextCursor === endPoint) {
+        this.rangeSelect(item, endPoint);
+        break;
+      }
+      if (prevCursor !== null) {
+        prevCursor = prevCursor.prev;
+      }
+      if (nextCursor !== null) {
+        nextCursor = nextCursor.next;
+      }
+    }
   };
+
+  private rangeSelect(begin: DraggableComponent, end: DraggableComponent) {
+    let cursor: DraggableComponent | null = begin;
+    while (true) {
+      if (!(cursor instanceof Schedule)) {
+        throw new Error("this item is not Schedule");
+      }
+      this.doSelect(cursor);
+      if(cursor === end) {
+        break;
+      }
+      cursor = cursor.next;
+    }
+  }
 
   private resetSelect() {
     this.selectedItemQueue.forEach(v => v.selected = false);
@@ -140,7 +175,7 @@ export default class ScheduleList extends DraggableList {
     this.contextMenu.show(new Position(e.clientX, e.clientY), [{
       title: "Delete",
       key: createRandomKey(),
-      disable: this.selectedItemQueue.length === 0,
+      disable: false,
       func: this.removeSelectedSchedule
     }], { Backspace: this.removeSelectedSchedule }, this.renderingEl);
     // TODO: 선택 값들 border 표시 변경
@@ -152,27 +187,27 @@ export default class ScheduleList extends DraggableList {
     }
     const lastSelectedItem = this.selectedItemQueue[this.selectedItemQueue.length - 1];
     const { head, tail } = this.getSelectedAdjacentRange(lastSelectedItem);
-    let currentCursor = this.list.findIndex(({ key }) => key === lastSelectedItem.key);
-    let nextCursor: number;
     if (e.code === "Backspace") {
       return this.removeSelectedSchedule();
     }
+
+
+    //FIXME: type assertion 제거하기
     switch (e.code) {
     case "ArrowDown":
-      nextCursor = Math.min(this.list.length - 1, tail + 1);
+      if (!e.shiftKey) {
+        this.resetSelect();
+      }
+      this.doSelect(<Schedule>(tail.next === null ? tail : tail.next));
       break;
     case "ArrowUp":
-      nextCursor = Math.max(0, head - 1);
+      if (!e.shiftKey) {
+        this.resetSelect();
+      }
+      this.doSelect(<Schedule>(head.prev === null ? head : head.prev));
       break;
     default:
       return;
-    }
-    if (!e.shiftKey) {
-      this.resetSelect();
-      //FIXME: type assertion 제거하기
-      this.doSelect(<Schedule>this.list[nextCursor]);
-    } else if (currentCursor !== nextCursor) {
-      this.doSelect(<Schedule>this.list[nextCursor]);
     }
   };
 
@@ -208,7 +243,6 @@ export default class ScheduleList extends DraggableList {
     const newSchedule = new Schedule();
     this.append(newSchedule);
     this.toggleEmptyText();
-    this.currentEl.append(newSchedule.currentEl);
     newSchedule.startEditMode("input");
     this.editItem = newSchedule;
   }
@@ -246,19 +280,18 @@ export default class ScheduleList extends DraggableList {
 
   //FIXME: type assertion 제거하기
   private getSelectedAdjacentRange(source: Schedule) {
-    const currentKeyIdx = this.list.findIndex((v) => v === source);
-    let head = currentKeyIdx, tail = currentKeyIdx;
-    while (head > 0) {
-      if (!this.selectedItemQueue.includes(<Schedule>this.list[head - 1])) {
+    let head: Schedule = source, tail: Schedule = source;
+    while (true) {
+      if (head.prev === null || !this.selectedItemQueue.includes(<Schedule>head.prev)) {
         break;
       }
-      head--;
+      head = <Schedule>head.prev;
     }
-    while (tail < this.list.length - 1) {
-      if (!this.selectedItemQueue.includes(<Schedule>this.list[tail + 1])) {
+    while (true) {
+      if (tail.next === null || !this.selectedItemQueue.includes(<Schedule>tail.next)) {
         break;
       }
-      tail++;
+      tail = <Schedule>tail.next;
     }
     return { head, tail };
   }

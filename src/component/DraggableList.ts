@@ -1,7 +1,7 @@
 import DraggableComponent from "./DraggableComponent";
 
 export default abstract class DraggableList {
-  private readonly componentKeys: { [index: string]: DraggableComponent } = {};
+  protected readonly componentKeys: { [index: string]: DraggableComponent } = {};
   private sourceComponent: DraggableComponent | null = null;
   private targetComponent: DraggableComponent | null = null;
   private targetPosition: "beforebegin" | "afterend" | null = null;
@@ -11,7 +11,11 @@ export default abstract class DraggableList {
 
   protected constructor(currentEl: HTMLElement, list: DraggableComponent[]) {
     this.currentEl = currentEl;
-    list.forEach((v) => v.link(this.absorb));
+    list.forEach((v, i) => {
+      v.link(this.absorb);
+      v.prev = i === 0 ? null : list[i - 1];
+      v.next = i === list.length - 1 ? null : list[i + 1];
+    });
     this.list = list;
     this.enrolledEvent["DRAG_START"] = this.DRAG_START;
     this.enrolledEvent["DRAG_END"] = this.DRAG_END;
@@ -21,10 +25,33 @@ export default abstract class DraggableList {
     draggableComponent.link(this.absorb);
     this.list.push(draggableComponent);
     this.componentKeys[draggableComponent.key] = draggableComponent;
+    const lastEl = this.currentEl.lastElementChild;
+    if (lastEl === null) {
+      this.currentEl.append(draggableComponent.currentEl);
+    } else {
+      if (!(lastEl instanceof HTMLElement)) {
+        throw new Error("draggable list children must be HTMLElement");
+      }
+      const key = lastEl.dataset.key;
+      if (key === undefined || !(this.componentKeys[key] instanceof DraggableComponent)) {
+        throw new Error("draggable list children has wrong data-key value");
+      }
+      this.componentKeys[key].next = draggableComponent;
+      draggableComponent.prev = this.componentKeys[key];
+      lastEl?.insertAdjacentElement("afterend", draggableComponent.currentEl);
+    }
   }
 
   remove(draggableComponent: DraggableComponent) {
     const targetIdx = this.list.findIndex(v => v === draggableComponent);
+    const prev = draggableComponent.prev;
+    const next = draggableComponent.next;
+    if (prev !== null) {
+      prev.next = next;
+    }
+    if (next !== null) {
+      next.prev = prev;
+    }
     this.list.splice(targetIdx, 1);
     delete this.componentKeys[draggableComponent.key];
   }
@@ -70,11 +97,34 @@ export default abstract class DraggableList {
     if (this.sourceComponent === null || this.targetComponent === null || this.targetPosition === null) {
       return;
     }
+    const sourcePrev = this.sourceComponent.prev;
+    const sourceNext = this.sourceComponent.next;
+    if (sourcePrev !== null) {
+      sourcePrev.next = sourceNext;
+    }
+    if (sourceNext !== null) {
+      sourceNext.prev = sourcePrev;
+    }
 
-    const sourceIndex = this.list.findIndex(v => v === this.sourceComponent);
-    const targetIndex = this.list.findIndex(v => v === this.targetComponent);
-    this.list.splice(sourceIndex, 1);
-    this.list.splice(targetIndex, 0, this.targetComponent);
+    let targetPrev: DraggableComponent | null;
+    let targetNext: DraggableComponent | null;
+    if (this.targetPosition === "beforebegin") {
+      targetPrev = this.targetComponent.prev;
+      targetNext = this.targetComponent;
+    } else {
+      targetPrev = this.targetComponent;
+      targetNext = this.targetComponent.next;
+    }
+
+    this.sourceComponent.prev = targetPrev;
+    this.sourceComponent.next = targetNext;
+    if (targetPrev !== null) {
+      targetPrev.next = this.sourceComponent;
+    }
+    if (targetNext !== null) {
+      targetNext.prev = this.sourceComponent;
+    }
+
     this.targetComponent.currentEl.insertAdjacentElement(this.targetPosition, this.sourceComponent.currentEl);
   }
 
