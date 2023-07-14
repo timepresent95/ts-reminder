@@ -26,8 +26,11 @@ export default class ContextMenu {
       this.hide();
     });
     this.currentEl.classList.add("context-menu", "text-body1", "d-none");
+    window.addEventListener("contextmenu", this.preventDefault);
     document.body.append(this.wrapperEl, this.currentEl);
   }
+
+  private preventDefault = (e: MouseEvent) => e.preventDefault()
 
   static getInstance() {
     if (!ContextMenu.instance) {
