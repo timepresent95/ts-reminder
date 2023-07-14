@@ -1,0 +1,96 @@
+@use "../abstracts/variables";
+@use "../base/typography";
+
+.side-bar {
+  padding: 8px;
+  height: 100%;
+  max-width: 300px;
+  min-width: 200px;
+  width: 100%;
+  flex: 0;
+  background-color: variables.$g4;
+
+  .window-control {
+    padding: 12px 4px;
+    display: flex;
+
+    &:hover {
+      & .close {
+        color: variables.$close-text-color;
+      }
+
+      & .minimize {
+        color: variables.$minimize-text-color;
+      }
+
+      & .maximize {
+        color: variables.$maximize-text-color;
+      }
+    }
+
+    button {
+      position: relative;
+      display: block;
+      height: 13px;
+      width: 13px;
+      border-radius: 50%;
+
+      &:not(:last-child) {
+        margin-right: 6px;
+      }
+
+      &:before {
+        position: absolute;
+        content: attr(data-icon);
+        top: 50%;
+        left: 50%;
+        font-size: 13px;
+        font-weight: bold;
+        line-height: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .close {
+      background-color: variables.$close-bg-color;
+      color: variables.$close-bg-color;
+    }
+
+    .minimize {
+      background-color: variables.$minimize-bg-color;
+      color: variables.$minimize-bg-color;
+    }
+
+    .maximize {
+      background-color: variables.$maximize-bg-color;
+      color: variables.$maximize-bg-color;
+    }
+  }
+
+  .search {
+    margin-top: 12px;
+    padding: 4px 4px 4px 28px;
+    @extend .text-body1;
+    color: black;
+    height: 30px;
+    border-radius: 6px;
+    background-color: variables.$g4;
+    width: 100%;
+    outline: none;
+    border: solid 1px variables.$g3;
+
+    &-label {
+      position: relative;
+
+      &:before {
+        content: '🔍';
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+
+
+  }
+}
