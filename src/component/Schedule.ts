@@ -143,10 +143,13 @@ export default class Schedule extends DraggableComponent {
     this.isCompleted = !this.isCompleted;
     appendScheduleList("today", this).then(() => {
       this.render();
+      if (this.emit === null) {
+        throw new Error("Component is not linked");
+      }
+      this.emit("TOGGLE_IS_COMPLETED", this)
     }).catch((e) => {
       console.error(e);
     });
-    this.render();
   }
 
   focus() {

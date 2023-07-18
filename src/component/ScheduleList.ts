@@ -10,6 +10,7 @@ import { deleteSchedule } from "../utility/firestoreManager";
 export default class ScheduleList extends DraggableList {
   private readonly allCompletedEl = document.createElement("p");
   private readonly mainEl = document.createElement("main");
+  private readonly emit: EventPipe;
   private editItem: Schedule | null = null;
   private selectedItems: { [key: string]: Schedule } = {};
   private selectedItemQueue: Schedule[] = [];
@@ -18,13 +19,14 @@ export default class ScheduleList extends DraggableList {
   private contextMenu: ContextMenu = ContextMenu.getInstance();
   private renderingEl: HTMLElement;
 
-  constructor(schedules?: SimplifySchedule[]) {
+  constructor(emit: EventPipe, schedules?: SimplifySchedule[]) {
     super(document.createElement("ol"), schedules?.map(({
       key,
       title,
       notes,
       isCompleted
     }) => new Schedule(title, notes, isCompleted, key)) ?? []);
+    this.emit = emit;
     this.currentEl.classList.add("schedules");
     this.list.forEach((item) => {
       if (!(item instanceof Schedule)) {
@@ -54,6 +56,7 @@ export default class ScheduleList extends DraggableList {
     this.enrolledEvent["MULTI_SELECT"] = this.MULTI_SELECT;
     this.enrolledEvent["RANGE_SELECT"] = this.RANGE_SELECT;
     this.enrolledEvent["CONTEXT_MENU"] = this.CONTEXT_MENU;
+    this.enrolledEvent["TOGGLE_IS_COMPLETED"] = this.TOGGLE_IS_COMPLETED;
 
     this.currentEl.addEventListener("click", this.clickOutSideHandler);
     this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
@@ -67,10 +70,17 @@ export default class ScheduleList extends DraggableList {
     this.allCompletedEl.removeEventListener("click", this.clickOutSideHandler);
   };
 
-  protected afterDragEnd = () => {
+  protected afterDragEnd = (component: DraggableComponent) => {
     this.mainEl.addEventListener("click", this.clickOutSideHandler);
     this.allCompletedEl.addEventListener("click", this.clickOutSideHandler);
+    if (component instanceof Schedule && component.isCompleted) {
+      this.refreshData();
+    }
   };
+
+  private TOGGLE_IS_COMPLETED = () => {
+    this.refreshData();
+  }
 
   private CREATE_NEW_SCHEDULE = () => {
     this.createNewSchedule();
@@ -334,23 +344,6 @@ export default class ScheduleList extends DraggableList {
     });
   };
 
-  // private compareFn = (first: DraggableComponent, second: DraggableComponent) => {
-  //   if (!(first instanceof Schedule) || !(second instanceof Schedule)) {
-  //     throw new Error("this item is not Schedule");
-  //   }
-  //   if (first === this.editItem) {
-  //     return 1;
-  //   }
-  //   if (second === this.editItem) {
-  //     return -1;
-  //   }
-  //   if (first.isCompleted === second.isCompleted) {
-  //     return 0;
-  //   } else {
-  //     return first.isCompleted ? 1 : -1;
-  //   }
-  // };
-
 
   //FIXME: type assertion 제거하기
   private getSelectedAdjacentRange(source: Schedule) {
@@ -370,21 +363,6 @@ export default class ScheduleList extends DraggableList {
     return { head, tail };
   }
 
-  // private getContextSelectedBorderClass = (key: string, idx: number): string[] => {
-  //   const ret: string[] = [];
-  //   if (!this.contextSelectedItemKeys.includes(key)) {
-  //     return ret;
-  //   }
-  //   ret.push("context-selected");
-  //   if (idx === 0 || !this.contextSelectedItemKeys.includes(this.schedules[idx - 1].key)) {
-  //     ret.push("context-selected-border-top");
-  //   }
-  //   if (idx === this.schedules.length - 1 || !this.contextSelectedItemKeys.includes(this.schedules[idx + 1].key)) {
-  //     ret.push("context-selected-border-bottom");
-  //   }
-  //   return ret;
-  // };
-
   private toggleEmptyText() {
     if (this.list.length === 0 && this.renderingEl === this.currentEl) {
       this.mainEl.replaceChild(this.allCompletedEl, this.currentEl);
@@ -394,6 +372,10 @@ export default class ScheduleList extends DraggableList {
       this.mainEl.replaceChild(this.currentEl, this.allCompletedEl);
       this.renderingEl = this.currentEl;
     }
+  }
+
+  private refreshData() {
+    this.emit("REFRESH_DATA");
   }
 
   render() {

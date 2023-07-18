@@ -9,7 +9,7 @@ export default class DraggableComponent {
   prev: DraggableComponent | null = null;
   next: DraggableComponent | null = null;
   protected draggableQuery: string[] = [];
-  protected emit: null | EventPipe = null;
+  protected emit: null | DragEventPipe = null;
   readonly currentEl: HTMLElement;
   readonly key: string;
 
@@ -74,7 +74,7 @@ export default class DraggableComponent {
     }
   };
 
-  link(emit: EventPipe){
+  link(emit: DragEventPipe){
    this.emit = emit;
   }
 

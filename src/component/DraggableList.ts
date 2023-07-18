@@ -7,7 +7,7 @@ export default abstract class DraggableList {
   private targetPosition: "beforebegin" | "afterend" | null = null;
   protected readonly list: DraggableComponent[] = [];
   protected readonly currentEl: HTMLElement;
-  protected enrolledEvent: EnrolledEvent = {};
+  protected enrolledEvent: EnrolledDragEvent = {};
 
   protected constructor(currentEl: HTMLElement, list: DraggableComponent[]) {
     this.currentEl = currentEl;
@@ -129,21 +129,21 @@ export default abstract class DraggableList {
     this.targetComponent.currentEl.insertAdjacentElement(this.targetPosition, this.sourceComponent.currentEl);
   }
 
-  protected absorb: EventPipe = (action: string, component: DraggableComponent) => {
-    if (!this.enrolledEvent[action]) {
+  protected absorb: DragEventPipe = (action: string, component: DraggableComponent) => {
+    if (this.enrolledEvent[action] === undefined) {
       throw new Error("This is an unregistered action");
     }
     this.enrolledEvent[action](component);
   };
 
   private DRAG_START = (component: DraggableComponent) => {
-    this.beforeDragStart();
+    this.beforeDragStart(component);
     this.sourceComponent = component;
     this.currentEl.addEventListener("mousemove", this.mousemove);
     this.currentEl.addEventListener("mouseleave", this.mouseleave);
   };
 
-  private DRAG_END = (_: DraggableComponent) => {
+  private DRAG_END = (component: DraggableComponent) => {
     this.targetComponent?.removeHighlight();
     this.moveComponent();
     this.sourceComponent = null;
@@ -151,10 +151,10 @@ export default abstract class DraggableList {
     this.targetPosition = null;
     this.currentEl.removeEventListener("mousemove", this.mousemove);
     this.currentEl.removeEventListener("mouseleave", this.mouseleave);
-    this.afterDragEnd();
+    this.afterDragEnd(component);
   };
 
-  protected abstract beforeDragStart(): void;
+  protected abstract beforeDragStart(component: DraggableComponent): void;
 
-  protected abstract afterDragEnd(): void;
+  protected abstract afterDragEnd(component: DraggableComponent): void;
 }
