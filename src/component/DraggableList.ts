@@ -15,6 +15,7 @@ export default abstract class DraggableList {
       v.link(this.absorb);
       v.prev = i === 0 ? null : list[i - 1];
       v.next = i === list.length - 1 ? null : list[i + 1];
+      this.componentKeys[v.key] = v;
     });
     this.list = list;
     this.enrolledEvent["DRAG_START"] = this.DRAG_START;

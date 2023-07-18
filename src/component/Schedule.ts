@@ -1,4 +1,6 @@
 import DraggableComponent from "./DraggableComponent";
+import { appendScheduleList } from "../utility/firestoreManager";
+import { createRandomKey } from "../utility/Random";
 
 export default class Schedule extends DraggableComponent {
   get selected(): boolean {
@@ -24,8 +26,9 @@ export default class Schedule extends DraggableComponent {
   constructor();
   constructor(title: string, notes: string);
   constructor(title: string, notes: string, isCompleted: boolean);
-  constructor(title?: string, notes?: string, isCompleted?: boolean) {
-    super(document.createElement("li"));
+  constructor(title: string, notes: string, isCompleted: boolean, key: string);
+  constructor(title?: string, notes?: string, isCompleted?: boolean, key?: string) {
+    super(document.createElement("li"), key ?? createRandomKey());
     this.title = title ?? "";
     this.notes = notes ?? "";
     this.isCompleted = isCompleted ?? false;
@@ -41,7 +44,7 @@ export default class Schedule extends DraggableComponent {
     }
 
     this.emit("CONTEXT_MENU", this);
-  }
+  };
 
   private click = (e: MouseEvent) => {
     if (e.button !== 0) {
@@ -56,8 +59,7 @@ export default class Schedule extends DraggableComponent {
       throw new Error("Component is not linked");
     }
     if (target.classList.contains("schedule-status")) {
-      this.isCompleted = !this.isCompleted;
-      this.render();
+      this.toggleIsCompleted();
     } else if (e.metaKey) {
       this.emit("MULTI_SELECT", this);
     } else if (e.shiftKey) {
@@ -130,8 +132,22 @@ export default class Schedule extends DraggableComponent {
       this.emit("REMOVE", this);
       return;
     }
-    this.render();
+    appendScheduleList("today", this).then(() => {
+      this.render();
+    }).catch((e) => {
+      console.error(e);
+    });
   };
+
+  private toggleIsCompleted() {
+    this.isCompleted = !this.isCompleted;
+    appendScheduleList("today", this).then(() => {
+      this.render();
+    }).catch((e) => {
+      console.error(e);
+    });
+    this.render();
+  }
 
   focus() {
     if (this.focusEl === null) {

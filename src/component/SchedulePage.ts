@@ -7,8 +7,10 @@ export default class SchedulePage {
   private readonly currentEl = document.createElement("section");
   private readonly scheduleList: ScheduleList;
 
-  constructor(title: string) {
-    this.scheduleList = new ScheduleList();
+  constructor(title: string);
+  constructor(title: string, scheduleList: SimplifySchedule[]);
+  constructor(title: string, scheduleList?: SimplifySchedule[]) {
+    this.scheduleList = new ScheduleList(scheduleList ?? []);
     this.addButtonEl.classList.add("add-button", "ml-auto", "mb-40", "text-g3");
     this.addButtonEl.innerHTML = "&plus;";
     this.titleEl.classList.add(`text-${title}`, "text-h1b");

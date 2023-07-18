@@ -5,6 +5,7 @@ import KeydownEventHandler from "../utility/KeydownEventHandler";
 import Position from "../utility/Position";
 import { createRandomKey } from "../utility/Random";
 import ContextMenu from "./ContextMenu";
+import { deleteSchedule } from "../utility/firestoreManager";
 
 export default class ScheduleList extends DraggableList {
   private readonly allCompletedEl = document.createElement("p");
@@ -17,8 +18,13 @@ export default class ScheduleList extends DraggableList {
   private contextMenu: ContextMenu = ContextMenu.getInstance();
   private renderingEl: HTMLElement;
 
-  constructor(schedules?: Schedule[]) {
-    super(document.createElement("ol"), schedules ?? []);
+  constructor(schedules?: SimplifySchedule[]) {
+    super(document.createElement("ol"), schedules?.map(({
+      key,
+      title,
+      notes,
+      isCompleted
+    }) => new Schedule(title, notes, isCompleted, key)) ?? []);
     this.currentEl.classList.add("schedules");
     this.list.forEach((item) => {
       if (!(item instanceof Schedule)) {
@@ -313,11 +319,19 @@ export default class ScheduleList extends DraggableList {
   };
 
   private removeSchedules = (targetList: Schedule[]) => {
-    targetList.forEach(v => {
-      this.currentEl.removeChild(v.currentEl);
-      this.remove(v);
+    Promise.allSettled(targetList.map(v => deleteSchedule("today", v))).then(removeResults => {
+      removeResults.forEach((result) => {
+          if (result.status === "fulfilled") {
+            this.currentEl.removeChild(result.value.currentEl);
+            this.remove(result.value);
+          } else {
+            console.error(result.reason);
+          }
+        }
+      );
+    }).then(() => {
+      this.toggleEmptyText();
     });
-    this.toggleEmptyText();
   };
 
   // private compareFn = (first: DraggableComponent, second: DraggableComponent) => {
