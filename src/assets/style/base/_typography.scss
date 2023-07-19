@@ -39,6 +39,28 @@ $fontSizes: 64, 40, 34, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 
   @extend .font-bold;
 }
 
+.text-h3 {
+  @extend .font-regular;
+  @extend .font-size-22;
+  line-height: 1.4;
+}
+
+.text-h3b {
+  @extend .text-h3;
+  @extend .font-bold;
+}
+
+.text-h4 {
+  @extend .font-regular;
+  @extend .font-size-16;
+  line-height: 1.4;
+}
+
+.text-h4b {
+  @extend .text-h4;
+  @extend .font-bold;
+}
+
 .text-body1 {
   @extend .font-regular;
   @extend .font-size-14;

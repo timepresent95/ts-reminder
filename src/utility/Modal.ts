@@ -8,35 +8,35 @@ export default class Modal {
     this.currentEl.classList.add("modal", "d-none");
   }
 
-  setParent(parent: HTMLElement) {
+  setParent = (parent: HTMLElement) => {
     if (this.parent) {
       this.parent.removeChild(this.currentEl);
     }
     this.parent = parent;
     this.parent.appendChild(this.currentEl);
-  }
+  };
 
-  setChild(child: HTMLElement) {
+  setChild = (child: HTMLElement) => {
     if (this.child) {
       this.currentEl.removeChild(child);
     }
     this.child = child;
     this.currentEl.appendChild(child);
-  }
+  };
 
-  show() {
+  show = () => {
     if (!this.parent || !this.child) {
       throw new Error("modal must have parent element and child element");
     }
     this.currentEl.classList.remove("d-none");
-  }
+  };
 
-  hide() {
+  hide = () => {
     if (!this.parent || !this.child) {
       throw new Error("modal must have parent element and child element");
     }
     this.currentEl.classList.add("d-none");
-  }
+  };
 
   static getInstance() {
     if (!Modal.instance) {

@@ -46,7 +46,7 @@ export default class ContextMenu {
     this.mutationObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.target === this.currentEl) {
-          const normalizedPosition = this.normalizePosition(position);
+          const normalizedPosition = position.normalizePosition(this.currentEl);
           this.currentEl.style.left = normalizedPosition.x + "px";
           this.currentEl.style.top = normalizedPosition.y + "px";
         }
@@ -93,25 +93,7 @@ export default class ContextMenu {
     this._isDisplayed = false;
   };
 
-  private normalizePosition(position: Position) {
-    const width = this.currentEl.offsetWidth;
-    const height = this.currentEl.offsetHeight;
-    const outOfBoundsOnX = position.x + width > document.body.offsetWidth;
-    const outOfBoundsOnY = position.y + height > document.body.offsetHeight;
-    let normalizedX = position.x;
-    let normalizedY = position.y;
 
-    if (outOfBoundsOnX && outOfBoundsOnY) {
-      normalizedX = position.x - width;
-      normalizedY = position.y - height;
-    } else if (outOfBoundsOnX) {
-      normalizedX = position.x - width;
-    } else if (outOfBoundsOnY) {
-      normalizedY = position.y - height;
-    }
-
-    return new Position(normalizedX, normalizedY);
-  }
 
   private keydown = (e: KeyboardEvent) => {
     if (this.keydownCustom[e.code]) {

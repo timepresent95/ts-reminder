@@ -50,6 +50,9 @@
     "webpack-dev-server": "^4.13.3"
   },
   "dependencies": {
-    "firebase": "^10.0.0"
+    "@emoji-mart/data": "^1.1.2",
+    "emoji-mart": "^5.5.2",
+    "firebase": "^10.0.0",
+    "material-icons": "^1.13.8"
   }
 }

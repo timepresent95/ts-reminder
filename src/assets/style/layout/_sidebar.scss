@@ -2,6 +2,7 @@
 @use "../base/typography";
 
 .side-bar {
+  position: relative;
   padding: 8px;
   height: 100%;
   max-width: 300px;
@@ -90,7 +91,17 @@
         transform: translateY(-50%);
       }
     }
+  }
 
+  .add-list-button {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    cursor: pointer;
+    @extend .text-g2;
 
+    &:focus {
+      @extend .text-g1;
+    }
   }
 }

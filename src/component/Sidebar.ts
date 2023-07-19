@@ -1,7 +1,13 @@
+import Modal from "../utility/Modal";
+import AddList from "./AddList";
+
 export default class Sidebar {
   private currentEl = document.createElement("section");
   private windowControlEl = document.createElement("div");
   private searchBoxEl = document.createElement("input");
+  private addListButton = document.createElement("button");
+  private modal: Modal = Modal.getInstance();
+  private readonly addList;
 
   constructor() {
     this.currentEl.classList.add("side-bar");
@@ -12,15 +18,24 @@ export default class Sidebar {
     <button data-icon="&plus;" class="maximize"></button>
     `;
     this.windowControlEl.addEventListener("click", this.windowControl);
+
     const labelEl = document.createElement("label");
-    labelEl.classList.add('search-label')
+    labelEl.classList.add("search-label");
     labelEl.appendChild(this.searchBoxEl);
     this.searchBoxEl.classList.add("search");
-    this.searchBoxEl.setAttribute('placeholder', 'Search')
+    this.searchBoxEl.setAttribute("placeholder", "Search");
     labelEl.appendChild(this.searchBoxEl);
+
+    this.addListButton.classList.add("add-list-button");
+    this.addListButton.textContent = "⊕ Add List";
+    this.addListButton.addEventListener("click", () => this.modal.show());
+
+    this.addList = new AddList(this.modal.hide);
+    this.modal.setChild(this.addList.currentEl);
 
     this.currentEl.appendChild(this.windowControlEl);
     this.currentEl.appendChild(labelEl);
+    this.currentEl.appendChild(this.addListButton);
   }
 
   private windowControl = (e: MouseEvent) => {
