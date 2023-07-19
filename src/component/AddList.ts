@@ -1,6 +1,6 @@
 import data from "@emoji-mart/data";
 import { Picker } from "emoji-mart";
-import { ICONS } from "../constant";
+import { COLORS, ICONS } from "../constant";
 import Position from "../utility/Position";
 
 export default class AddList {
@@ -11,26 +11,30 @@ export default class AddList {
   private readonly colorPickerEl = document.createElement("div");
   private colorPicked: string = AddList.colors[0];
   private readonly emojiButtonEl = document.createElement("button");
+  private readonly emojiPicker = new Picker({
+    parent: document.body,
+    data,
+    categories: ["nature", "foods", "activity", "places", "objects", "symbols", "flags"],
+    onEmojiSelect: (emoji: { native: string }) => {
+      this.emojiButtonEl.innerHTML = `<span>${emoji.native}</span>`;
+      if (!(this.emojiPicker instanceof HTMLElement)) {
+        return;
+      }
+      this.emojiPicker.style.display = "none";
+    }
+  });
   private readonly iconButtonEl = document.createElement("button");
   private readonly iconPickerEl = document.createElement("ul");
   private readonly okButton = document.createElement("button");
   private readonly cancelButton = document.createElement("button");
   private static readonly icons: string[] = ICONS;
-  private static readonly colors: string[] = [
-    "rgb(255, 69, 59)",
-    "rgb(255, 158, 11)",
-    "rgb(255, 213, 11)",
-    "rgb(46, 209, 91)",
-    "rgb(121, 195, 255)",
-    "rgb(11, 132, 255)",
-    "rgb(94, 92, 230)",
-    "rgb(255, 79, 121)",
-    "rgb(213, 127,245)",
-    "rgb(201, 166, 118)",
-    "rgb(114, 126, 135)",
-    "rgb(234, 181, 174)"];
+  private static readonly colors: string[] = COLORS;
 
   constructor(hide: () => void) {
+    if (!(this.emojiPicker instanceof HTMLElement)) {
+      return;
+    }
+    this.emojiPicker.style.display = "none";
     this.titleEl.classList.add("text-body1b", "mb-12");
     this.titleEl.textContent = "New List";
     this.labelEl.textContent = "Name:";
@@ -83,27 +87,22 @@ export default class AddList {
 
   private showEmojiPicker = (e: MouseEvent) => {
     const { clientX, clientY } = e;
-    const picker = new Picker({
-      parent: document.body,
-      data,
-      // @ts-ignore NOTE: input parameter 조사
-      onEmojiSelect: (...a) => {
-        console.log(a);
-      },
-      // @ts-ignore NOTE: input parameter 조사
-      onClickOutside: (...a) => {
-        console.log(a);
-      }
-    });
-    if (!(picker instanceof HTMLElement)) {
+    if (!(this.emojiPicker instanceof HTMLElement)) {
       return;
     }
-
-    const normalizedPosition = new Position(clientX, clientY).normalizePosition(picker);
-
-    picker.style.position = "fixed";
-    picker.style.left = normalizedPosition.x + "px";
-    picker.style.top = clientY / 2 + "px";
-    picker.style.zIndex = "2000";
+    const normalizedPosition = new Position(clientX, clientY).normalizePosition(this.emojiPicker);
+    this.emojiPicker.style.position = "fixed";
+    this.emojiPicker.style.left = normalizedPosition.x + "px";
+    this.emojiPicker.style.top = clientY / 2 + "px";
+    this.emojiPicker.style.zIndex = "2000";
+    this.emojiPicker.style.display = "flex";
+    this.emojiPicker.attributeChangedCallback("onClickOutside", null, () => {
+      if (!(this.emojiPicker instanceof HTMLElement)) {
+        return;
+      }
+      this.emojiPicker.style.display = "none";
+      this.emojiPicker.attributeChangedCallback("onClickOutside", null, () => {
+      });
+    });
   };
 }
