@@ -1,3 +1,17 @@
+export const COLORS = [
+  "rgb(255, 69, 59)",
+  "rgb(255, 158, 11)",
+  "rgb(255, 213, 11)",
+  "rgb(46, 209, 91)",
+  "rgb(121, 195, 255)",
+  "rgb(11, 132, 255)",
+  "rgb(94, 92, 230)",
+  "rgb(255, 79, 121)",
+  "rgb(213, 127,245)",
+  "rgb(201, 166, 118)",
+  "rgb(114, 126, 135)",
+  "rgb(234, 181, 174)"
+];
 export const ICONS = [
   "format_list_bulleted",
   "bookmark",
@@ -55,17 +69,5 @@ export const ICONS = [
   "favorite",
   "star"
 ];
-export const COLORS = [
-  "rgb(255, 69, 59)",
-  "rgb(255, 158, 11)",
-  "rgb(255, 213, 11)",
-  "rgb(46, 209, 91)",
-  "rgb(121, 195, 255)",
-  "rgb(11, 132, 255)",
-  "rgb(94, 92, 230)",
-  "rgb(255, 79, 121)",
-  "rgb(213, 127,245)",
-  "rgb(201, 166, 118)",
-  "rgb(114, 126, 135)",
-  "rgb(234, 181, 174)"
-];
+
+export const EMOJI_CATEGORIES = ["nature", "foods", "activity", "places", "objects", "symbols", "flags"];
