@@ -44,6 +44,13 @@ export default class AddList {
     this.titleEl.textContent = "New List";
     this.labelEl.textContent = "Name:";
     this.labelEl.appendChild(this.inputEl);
+    this.inputEl.addEventListener("input", (e) => {
+      if (this.inputEl.value.trim() === "") {
+        this.okButton.setAttribute("disabled", "");
+      } else {
+        this.okButton.removeAttribute("disabled");
+      }
+    });
     this.colorPickerEl.classList.add("color-picker");
     this.colorPickerEl.innerHTML = `<p>Color:</p>
       <fieldset>
@@ -73,9 +80,16 @@ export default class AddList {
     iconWrapper.append(this.emojiButtonEl, this.iconButtonEl);
     decorationWrapper.append(this.colorPickerEl, iconWrapper);
     this.okButton.textContent = "OK";
-    this.okButton.addEventListener("click", hide);
+    this.okButton.addEventListener("click", () => {
+      this.inputEl.value = "";
+      hide();
+    });
+    this.okButton.setAttribute("disabled", "");
     this.cancelButton.textContent = "Cancel";
-    this.cancelButton.addEventListener("click", hide);
+    this.cancelButton.addEventListener("click", () => {
+      this.inputEl.value = "";
+      hide();
+    });
     const buttonWrapper = document.createElement("div");
     buttonWrapper.classList.add("button-wrapper");
     buttonWrapper.append(this.cancelButton, this.okButton);
