@@ -1,7 +1,9 @@
 import ScheduleList from "./ScheduleList";
 import { getScheduleList } from "../utility/firestoreManager";
+import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class SchedulePage {
+  private readonly category: ScheduleCategory;
   private readonly headerEl = document.createElement("header");
   private readonly addButtonEl = document.createElement("button");
   private readonly titleEl = document.createElement("h1");
@@ -9,14 +11,15 @@ export default class SchedulePage {
   private scheduleList: ScheduleList;
   private enrolledEvent: EnrolledEvent = {};
 
-  constructor(title: string);
-  constructor(title: string, scheduleList: SimplifySchedule[]);
-  constructor(title: string, scheduleList?: SimplifySchedule[]) {
-    this.scheduleList = new ScheduleList(this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
+  constructor(category: ScheduleCategory);
+  constructor(category: ScheduleCategory, scheduleList: SimplifySchedule[]);
+  constructor(category: ScheduleCategory, scheduleList?: SimplifySchedule[]) {
+    this.category = category;
+    this.scheduleList = new ScheduleList(this.category, this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
     this.addButtonEl.classList.add("add-button", "ml-auto", "mb-40", "text-g3");
     this.addButtonEl.innerHTML = "&plus;";
-    this.titleEl.classList.add(`text-${title}`, "text-h1b");
-    this.titleEl.textContent = title.proper() ?? "";
+    this.titleEl.classList.add(`text-${this.category.name}`, "text-h1b");
+    this.titleEl.textContent = this.category.name.proper() ?? "";
     this.headerEl.classList.add("p-20");
     this.headerEl.appendChild(this.addButtonEl);
     this.headerEl.appendChild(this.titleEl);
@@ -32,8 +35,8 @@ export default class SchedulePage {
   }
 
   private REFRESH_DATA = () => {
-    getScheduleList("today").then(scheduleList => {
-      this.scheduleList = new ScheduleList(this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
+    getScheduleList(this.category.name).then(scheduleList => {
+      this.scheduleList = new ScheduleList(this.category, this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
       this.create();
       this.render();
     });
@@ -44,7 +47,7 @@ export default class SchedulePage {
   }
 
   create() {
-    this.currentEl.innerHTML = '';
+    this.currentEl.innerHTML = "";
     this.currentEl.appendChild(this.headerEl);
     this.currentEl.appendChild(this.scheduleList.create());
     return this.currentEl;

@@ -66,7 +66,7 @@ export async function appendScheduleList(category: string, schedule: Schedule) {
       isCompleted: schedule.isCompleted
     });
   } catch {
-    throw new Error("firestore error");
+    throw new Error("appendScheduleList firestore error");
   }
 }
 
@@ -86,7 +86,7 @@ export async function getScheduleList(category: string) {
     });
     return ret;
   } catch {
-    throw new Error("firestore error");
+    throw new Error("getScheduleList firestore error");
   }
 }
 
@@ -96,6 +96,6 @@ export async function deleteSchedule(category: string, schedule: Schedule) {
     await deleteDoc(doc(categoryDocumentRef, "scheduleList", schedule.key));
     return schedule;
   } catch {
-    throw new Error("firestore error");
+    throw new Error("deleteSchedule firestore error");
   }
 }

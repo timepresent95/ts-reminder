@@ -12,9 +12,8 @@ async function init() {
   const category = await getCategories();
   const sidebar = new Sidebar(category);
   const sidebarEl = sidebar.create();
-  // const title = category[0].name;
-  // const schedules = await getScheduleList(title);
-  const schedulePage = new SchedulePage('test', []);
+  const schedules = await getScheduleList(category[0].name);
+  const schedulePage = new SchedulePage(category[0], schedules);
   const schedulePageEl = schedulePage.create();
   const app = document.createElement("div");
   const modal = Modal.getInstance();

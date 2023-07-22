@@ -1,6 +1,7 @@
 import DraggableComponent from "./DraggableComponent";
 import { appendScheduleList } from "../utility/firestoreManager";
 import { createRandomKey } from "../utility/Random";
+import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class Schedule extends DraggableComponent {
   get selected(): boolean {
@@ -16,6 +17,7 @@ export default class Schedule extends DraggableComponent {
     this._selected = value;
   }
 
+  private readonly category: ScheduleCategory;
   private focusEl: "input" | "textarea" | null = null;
   private editMode = false;
   private _selected = false;
@@ -23,12 +25,13 @@ export default class Schedule extends DraggableComponent {
   notes: string;
   isCompleted: boolean;
 
-  constructor();
-  constructor(title: string, notes: string);
-  constructor(title: string, notes: string, isCompleted: boolean);
-  constructor(title: string, notes: string, isCompleted: boolean, key: string);
-  constructor(title?: string, notes?: string, isCompleted?: boolean, key?: string) {
+  constructor(category: ScheduleCategory);
+  constructor(category: ScheduleCategory, title: string, notes: string);
+  constructor(category: ScheduleCategory, title: string, notes: string, isCompleted: boolean);
+  constructor(category: ScheduleCategory, title: string, notes: string, isCompleted: boolean, key: string);
+  constructor(category: ScheduleCategory, title?: string, notes?: string, isCompleted?: boolean, key?: string) {
     super(document.createElement("li"), key ?? createRandomKey());
+    this.category = category;
     this.title = title ?? "";
     this.notes = notes ?? "";
     this.isCompleted = isCompleted ?? false;
@@ -146,7 +149,7 @@ export default class Schedule extends DraggableComponent {
       if (this.emit === null) {
         throw new Error("Component is not linked");
       }
-      this.emit("TOGGLE_IS_COMPLETED", this)
+      this.emit("TOGGLE_IS_COMPLETED", this);
     }).catch((e) => {
       console.error(e);
     });
