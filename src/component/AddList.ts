@@ -2,6 +2,8 @@ import data from "@emoji-mart/data";
 import { Picker } from "emoji-mart";
 import { COLORS, EMOJI_CATEGORIES, ICONS } from "../constant";
 import Position from "../utility/Position";
+import { createCategories } from "../utility/firestoreManager";
+import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class AddList {
   private parentEl: HTMLElement | null = null;
@@ -17,9 +19,9 @@ export default class AddList {
   private readonly iconPickerEl = document.createElement("ul");
   private static readonly icons: string[] = ICONS;
   private static readonly colors: string[] = COLORS;
-  private selectedColor: string = AddList.colors[0];
+  private pickedColor: string = AddList.colors[0];
   private selectedIcon = AddList.icons[0];
-  private selectedEmoji = "🍏";
+  private pickedIcon = "🍏";
 
   constructor(hide: () => void) {
     this.emojiPicker = new Picker({
@@ -44,7 +46,7 @@ export default class AddList {
       <fieldset>
         ${AddList.colors.map((v) =>
       `<input 
-            ${v === this.selectedColor ? "checked" : ""} 
+            ${v === this.pickedColor ? "checked" : ""} 
             type="radio" 
             name="color" 
             style="background-color: ${v}" 
@@ -52,13 +54,13 @@ export default class AddList {
           />`)
       .join("")}
       </fieldset>`;
-    this.emojiButtonEl.innerHTML = `<span>${this.selectedEmoji}</span>`;
-    this.emojiButtonEl.setAttribute("style", `background-color: ${this.selectedColor}`);
+    this.emojiButtonEl.innerHTML = `<span>${this.pickedIcon}</span>`;
+    this.emojiButtonEl.setAttribute("style", `background-color: ${this.pickedColor}`);
     this.emojiButtonEl.classList.add("selected");
     this.emojiButtonEl.addEventListener("click", this.showEmojiPicker);
     this.iconButtonEl.innerHTML = `<span class="material-icons">${this.selectedIcon}</span>`;
     this.iconButtonEl.addEventListener("click", this.showIconPicker);
-    this.iconButtonEl.setAttribute("style", `background-color: ${this.selectedColor}`);
+    this.iconButtonEl.setAttribute("style", `background-color: ${this.pickedColor}`);
     const iconWrapper = document.createElement("div");
     iconWrapper.classList.add("icon-wrapper");
     iconWrapper.append(this.emojiButtonEl, this.iconButtonEl);
@@ -68,8 +70,13 @@ export default class AddList {
 
     this.okButton.textContent = "OK";
     this.okButton.addEventListener("click", () => {
-      this.resetInput();
-      hide();
+      createCategories(new ScheduleCategory(this.inputEl.value, this.pickedColor, this.pickedIcon)).then(() => {
+      }).catch(e => {
+        console.error(e);
+      }).finally(() => {
+        this.resetInput();
+        hide();
+      });
     });
     this.okButton.setAttribute("disabled", "");
     this.cancelButton.textContent = "Cancel";
@@ -93,11 +100,11 @@ export default class AddList {
     if (!(this.emojiPicker instanceof HTMLElement)) {
       return;
     }
-    this.selectedEmoji = emoji.native;
+    this.pickedIcon = emoji.native;
     this.emojiButtonEl.classList.add("selected");
     this.iconButtonEl.classList.remove("selected");
     this.emojiPicker.style.display = "none";
-  }
+  };
 
   private onInputEvent = (e: Event) => {
     if (e.currentTarget instanceof HTMLInputElement && e.currentTarget.value.trim() === "") {
@@ -116,9 +123,9 @@ export default class AddList {
     if (!(target instanceof HTMLInputElement)) {
       return;
     }
-    this.selectedColor = target.value;
-    this.emojiButtonEl.setAttribute("style", `background-color: ${this.selectedColor}`);
-    this.iconButtonEl.setAttribute("style", `background-color: ${this.selectedColor}`);
+    this.pickedColor = target.value;
+    this.emojiButtonEl.setAttribute("style", `background-color: ${this.pickedColor}`);
+    this.iconButtonEl.setAttribute("style", `background-color: ${this.pickedColor}`);
   };
 
   private showEmojiPicker = (e: MouseEvent) => {

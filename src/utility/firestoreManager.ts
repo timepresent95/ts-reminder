@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { doc, getFirestore, collection, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 import { DocumentReference } from "@firebase/firestore";
 import Schedule from "../component/Schedule";
+import ScheduleCategory from "../types/ScheduleCategory";
 
 const firebaseConfig = {
   apiKey: process.env.FIRE_STORE_API_KEY,
@@ -34,16 +35,26 @@ async function getCategoryDocumentRef(category: string): Promise<DocumentReferen
   return ret;
 }
 
+export async function createCategories(scheduleCategory: ScheduleCategory) {
+  try {
+    const ref = doc(db, "category", scheduleCategory.name).withConverter(ScheduleCategory.converter);
+    await setDoc(ref, scheduleCategory);
+  } catch (e) {
+    console.error(e);
+    throw new Error("createCategories firestore error");
+  }
+}
+
 export async function getCategories() {
   try {
-    const querySnapshot = await getDocs(collection(db, "category"));
-    const ret: string[] = [];
+    const querySnapshot = await getDocs(collection(db, "category").withConverter(ScheduleCategory.converter));
+    const ret: ScheduleCategory[] = [];
     querySnapshot.forEach(snapshot => {
-      ret.push(snapshot.data().title);
+      ret.push(snapshot.data());
     });
     return ret;
   } catch {
-    throw new Error("firestore error");
+    throw new Error("getCategories firestore error");
   }
 }
 
