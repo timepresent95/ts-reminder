@@ -22,6 +22,7 @@ export default class AddList {
   private pickedColor: string = AddList.colors[0];
   private selectedIcon = AddList.icons[0];
   private pickedIcon = "🍏";
+  private isEmoji: boolean = true;
 
   constructor(hide: () => void) {
     this.emojiPicker = new Picker({
@@ -70,7 +71,7 @@ export default class AddList {
 
     this.okButton.textContent = "OK";
     this.okButton.addEventListener("click", () => {
-      createCategories(new ScheduleCategory(this.inputEl.value, this.pickedColor, this.pickedIcon)).then(() => {
+      createCategories(new ScheduleCategory(this.inputEl.value, this.pickedColor, this.pickedIcon, this.isEmoji)).then(() => {
       }).catch(e => {
         console.error(e);
       }).finally(() => {
@@ -100,6 +101,7 @@ export default class AddList {
     if (!(this.emojiPicker instanceof HTMLElement)) {
       return;
     }
+    this.isEmoji = true;
     this.pickedIcon = emoji.native;
     this.emojiButtonEl.classList.add("selected");
     this.iconButtonEl.classList.remove("selected");
@@ -156,6 +158,7 @@ export default class AddList {
       `<li class="${v === this.selectedIcon ? "selected" : ""}" data-icon="${v}">
         <span class="material-icons">${v}</span>
       </li>`).join("");
+    this.isEmoji = false;
     this.iconPickerEl.style.position = "fixed";
     this.iconPickerEl.style.left = normalizedPosition.x + "px";
     this.iconPickerEl.style.top = clientY / 2 + "px";

@@ -25,7 +25,7 @@ async function getCategoryDocumentRef(category: string): Promise<DocumentReferen
   const querySnapshot = await getDocs(collection(db, "category"));
   let ret: DocumentReference | null = null;
   querySnapshot.forEach(snapshot => {
-    if (snapshot.data().title === category) {
+    if (snapshot.id === category) {
       ret = snapshot.ref;
     }
   });
@@ -40,7 +40,6 @@ export async function createCategories(scheduleCategory: ScheduleCategory) {
     const ref = doc(db, "category", scheduleCategory.name).withConverter(ScheduleCategory.converter);
     await setDoc(ref, scheduleCategory);
   } catch (e) {
-    console.error(e);
     throw new Error("createCategories firestore error");
   }
 }

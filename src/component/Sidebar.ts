@@ -1,15 +1,17 @@
 import Modal from "../utility/Modal";
 import AddList from "./AddList";
+import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class Sidebar {
   private currentEl = document.createElement("section");
   private windowControlEl = document.createElement("div");
   private searchBoxEl = document.createElement("input");
   private addListButton = document.createElement("button");
+  private myListsEl = document.createElement("div");
   private modal: Modal = Modal.getInstance();
   private readonly addList;
 
-  constructor() {
+  constructor(categories: ScheduleCategory[]) {
     this.currentEl.classList.add("side-bar");
     this.windowControlEl.classList.add("window-control");
     this.windowControlEl.innerHTML = `
@@ -26,6 +28,13 @@ export default class Sidebar {
     this.searchBoxEl.setAttribute("placeholder", "Search");
     labelEl.appendChild(this.searchBoxEl);
 
+    this.myListsEl.classList.add("my-lists");
+    this.myListsEl.innerHTML =
+      `<p class="text-body3b">My Lists</p>
+       <ul class="text-body1b">${categories.map(v =>
+        `<li><span class="${v.isEmoji ? "" : "material-icons"}">${v.icon}</span>${v.name}</li>`)}
+       </ul>`;
+
     this.addListButton.classList.add("add-list-button");
     this.addListButton.textContent = "⊕ Add List";
     this.addListButton.addEventListener("click", () => this.modal.show());
@@ -33,9 +42,7 @@ export default class Sidebar {
     this.addList = new AddList(this.modal.hide);
     this.modal.setChild(this.addList.currentEl);
 
-    this.currentEl.appendChild(this.windowControlEl);
-    this.currentEl.appendChild(labelEl);
-    this.currentEl.appendChild(this.addListButton);
+    this.currentEl.append(this.windowControlEl, labelEl, this.myListsEl, this.addListButton);
   }
 
   private windowControl = (e: MouseEvent) => {

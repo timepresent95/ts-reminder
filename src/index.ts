@@ -9,12 +9,12 @@ String.prototype.proper = function() {
 };
 
 async function init() {
-  const sidebar = new Sidebar();
-  const sidebarEl = sidebar.create();
   const category = await getCategories();
-  const title = category[0].name;
-  const schedules = await getScheduleList(title);
-  const schedulePage = new SchedulePage(title, schedules);
+  const sidebar = new Sidebar(category);
+  const sidebarEl = sidebar.create();
+  // const title = category[0].name;
+  // const schedules = await getScheduleList(title);
+  const schedulePage = new SchedulePage('test', []);
   const schedulePageEl = schedulePage.create();
   const app = document.createElement("div");
   const modal = Modal.getInstance();
