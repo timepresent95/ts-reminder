@@ -10,7 +10,7 @@
   font-weight: 700;
 }
 
-$fontSizes: 64, 40, 34, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13;
+$fontSizes: 64, 40, 34, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 10, 8;
 @each $size in $fontSizes {
   .font-size-#{$size} {
     font-size: $size + px;
@@ -64,11 +64,44 @@ $fontSizes: 64, 40, 34, 30, 28, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 
 .text-body1 {
   @extend .font-regular;
   @extend .font-size-14;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .text-body1b {
   @extend .text-body1;
+  @extend .font-bold;
+}
+
+.text-body2 {
+  @extend .font-regular;
+  @extend .font-size-12;
+  line-height: 1.4;
+}
+
+.text-body2b {
+  @extend .text-body2;
+  @extend .font-bold;
+}
+
+.text-body3 {
+  @extend .font-regular;
+  @extend .font-size-10;
+  line-height: 1.4;
+}
+
+.text-body3b {
+  @extend .text-body3;
+  @extend .font-bold;
+}
+
+.text-body4 {
+  @extend .font-regular;
+  @extend .font-size-8;
+  line-height: 1.4;
+}
+
+.text-body4b {
+  @extend .text-body4;
   @extend .font-bold;
 }
 
