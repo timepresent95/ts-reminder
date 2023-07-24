@@ -175,7 +175,8 @@ export default class AddList {
       if (!(iconListEl instanceof HTMLLIElement) || !(typeof iconListEl.dataset.icon === "string")) {
         return;
       }
-      this.selectedIcon = iconListEl.dataset.icon;
+      this.isEmoji = false;
+      this.pickedIcon = iconListEl.dataset.icon;
       this.iconButtonEl.innerHTML = `<span class="material-icons">${this.selectedIcon}</span>`;
       this.iconButtonEl.classList.add("selected");
       this.emojiButtonEl.classList.remove("selected");
