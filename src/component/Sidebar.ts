@@ -31,7 +31,7 @@ export default class Sidebar {
     this.myListsEl.innerHTML =
       `<p class="text-body3b">My Lists</p>
        <ul class="text-body1b">${categories.map(v =>
-        `<li><span class="${v.isEmoji ? "" : "material-icons"}">${v.icon}</span>${v.name}</li>`)}
+        `<li><span class="${v.isEmoji ? "" : "material-icons"}">${v.icon}</span>${v.name}</li>`).join('')}
        </ul>`;
 
     this.addListButton.classList.add("add-list-button");

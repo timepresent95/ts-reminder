@@ -17,7 +17,7 @@ export default class SchedulePage {
     this.scheduleList = new ScheduleList(this.category, this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
     this.addButtonEl.classList.add("add-button", "ml-auto", "mb-40", "text-g3");
     this.addButtonEl.innerHTML = "&plus;";
-    this.titleEl.classList.add(`text-${this.category.name}`, "text-h1b");
+    this.titleEl.classList.add(`text-${this.category.name.replace(/ /, "-")}`, "text-h1b");
     this.titleEl.textContent = this.category.name.proper() ?? "";
     this.headerEl.classList.add("p-20");
     this.headerEl.appendChild(this.addButtonEl);
