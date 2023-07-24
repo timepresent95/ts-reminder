@@ -1,8 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { doc, getFirestore, collection, setDoc, getDocs, deleteDoc } from "firebase/firestore";
-import { DocumentReference } from "@firebase/firestore";
+import { doc, getFirestore, collection, setDoc, getDocs, deleteDoc, query, where } from "firebase/firestore";
+import { QueryDocumentSnapshot, SnapshotOptions } from "@firebase/firestore";
 import Schedule from "../component/Schedule";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 const firebaseConfig = {
   apiKey: process.env.FIRE_STORE_API_KEY,
@@ -21,23 +20,16 @@ const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
-async function getCategoryDocumentRef(category: string): Promise<DocumentReference> {
-  const querySnapshot = await getDocs(collection(db, "category"));
-  let ret: DocumentReference | null = null;
-  querySnapshot.forEach(snapshot => {
-    if (snapshot.id === category) {
-      ret = snapshot.ref;
-    }
-  });
-  if (ret === null) {
-    throw new Error(`${category} category is not exist`);
-  }
-  return ret;
-}
+const genericConverter = <T>() => ({
+  toFirestore: (data: T) => data,
+  fromFirestore: (snapshot: QueryDocumentSnapshot<T>, options: SnapshotOptions) => snapshot.data(options)
+});
 
+
+//NOTE: 중복된 이름으로 생성 불가능 하게 만들어야 함.
 export async function createCategories(scheduleCategory: ScheduleCategory) {
   try {
-    const ref = doc(db, "category", scheduleCategory.name).withConverter(ScheduleCategory.converter);
+    const ref = doc(db, "category", scheduleCategory.name).withConverter(genericConverter<ScheduleCategory>());
     await setDoc(ref, scheduleCategory);
   } catch (e) {
     throw new Error("createCategories firestore error");
@@ -46,54 +38,46 @@ export async function createCategories(scheduleCategory: ScheduleCategory) {
 
 export async function getCategories() {
   try {
-    const querySnapshot = await getDocs(collection(db, "category").withConverter(ScheduleCategory.converter));
+    const querySnapshot = await getDocs(collection(db, "category").withConverter(genericConverter<ScheduleCategory>()));
     const ret: ScheduleCategory[] = [];
-    querySnapshot.forEach(snapshot => {
-      ret.push(snapshot.data());
-    });
+    querySnapshot.forEach(snapshot => ret.push(snapshot.data()));
     return ret;
   } catch {
     throw new Error("getCategories firestore error");
   }
 }
 
-export async function appendScheduleList(category: string, schedule: Schedule) {
+export async function appendScheduleList(category: ScheduleCategory, schedule: Schedule) {
   try {
-    const categoryDocumentRef = await getCategoryDocumentRef(category);
-    await setDoc(doc(categoryDocumentRef, "scheduleList", schedule.key), {
+    const ref = doc(db, "schedules", schedule.key).withConverter(genericConverter<ScheduleData>());
+    await setDoc(ref, {
+      key: schedule.key,
       title: schedule.title,
       notes: schedule.notes,
-      isCompleted: schedule.isCompleted
+      isCompleted: schedule.isCompleted,
+      category
     });
-  } catch {
+  } catch (e) {
+    console.error(e);
     throw new Error("appendScheduleList firestore error");
   }
 }
 
-export async function getScheduleList(category: string) {
+export async function getScheduleList(category: ScheduleCategory) {
   try {
-    const categoryDocumentRef = await getCategoryDocumentRef(category);
-    const querySnapshot = await getDocs(collection(categoryDocumentRef, "scheduleList"));
-    const ret: SimplifySchedule[] = [];
-    querySnapshot.forEach(snapshot => {
-      const data = snapshot.data();
-      ret.push({
-        key: snapshot.id,
-        title: data.title as string,
-        notes: data.notes as string,
-        isCompleted: data.isCompleted as boolean
-      });
-    });
+    const querySnapshot =
+      await getDocs(query(collection(db, "schedules"), where("category", "==", category)).withConverter(genericConverter<ScheduleData>()));
+    const ret: ScheduleData[] = [];
+    querySnapshot.forEach(snapshot => ret.push(snapshot.data()));
     return ret;
   } catch {
     throw new Error("getScheduleList firestore error");
   }
 }
 
-export async function deleteSchedule(category: string, schedule: Schedule) {
+export async function deleteSchedule(schedule: Schedule) {
   try {
-    const categoryDocumentRef = await getCategoryDocumentRef(category);
-    await deleteDoc(doc(categoryDocumentRef, "scheduleList", schedule.key));
+    await deleteDoc(doc(db, "schedules", schedule.key));
     return schedule;
   } catch {
     throw new Error("deleteSchedule firestore error");

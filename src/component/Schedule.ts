@@ -1,7 +1,6 @@
 import DraggableComponent from "./DraggableComponent";
 import { appendScheduleList } from "../utility/firestoreManager";
 import { createRandomKey } from "../utility/Random";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class Schedule extends DraggableComponent {
   get selected(): boolean {
@@ -135,7 +134,7 @@ export default class Schedule extends DraggableComponent {
       this.emit("REMOVE", this);
       return;
     }
-    appendScheduleList("today", this).then(() => {
+    appendScheduleList(this.category, this).then(() => {
       this.render();
     }).catch((e) => {
       console.error(e);
@@ -144,7 +143,7 @@ export default class Schedule extends DraggableComponent {
 
   private toggleIsCompleted() {
     this.isCompleted = !this.isCompleted;
-    appendScheduleList("today", this).then(() => {
+    appendScheduleList(this.category, this).then(() => {
       this.render();
       if (this.emit === null) {
         throw new Error("Component is not linked");

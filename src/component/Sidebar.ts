@@ -1,6 +1,5 @@
 import Modal from "../utility/Modal";
 import AddList from "./AddList";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class Sidebar {
   private currentEl = document.createElement("section");

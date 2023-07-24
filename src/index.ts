@@ -12,7 +12,7 @@ async function init() {
   const category = await getCategories();
   const sidebar = new Sidebar(category);
   const sidebarEl = sidebar.create();
-  const schedules = await getScheduleList(category[0].name);
+  const schedules = await getScheduleList(category[0]);
   const schedulePage = new SchedulePage(category[0], schedules);
   const schedulePageEl = schedulePage.create();
   const app = document.createElement("div");

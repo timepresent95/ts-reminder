@@ -1,6 +1,5 @@
 import ScheduleList from "./ScheduleList";
 import { getScheduleList } from "../utility/firestoreManager";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class SchedulePage {
   private readonly category: ScheduleCategory;
@@ -12,8 +11,8 @@ export default class SchedulePage {
   private enrolledEvent: EnrolledEvent = {};
 
   constructor(category: ScheduleCategory);
-  constructor(category: ScheduleCategory, scheduleList: SimplifySchedule[]);
-  constructor(category: ScheduleCategory, scheduleList?: SimplifySchedule[]) {
+  constructor(category: ScheduleCategory, scheduleList: ScheduleData[]);
+  constructor(category: ScheduleCategory, scheduleList?: ScheduleData[]) {
     this.category = category;
     this.scheduleList = new ScheduleList(this.category, this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
     this.addButtonEl.classList.add("add-button", "ml-auto", "mb-40", "text-g3");
@@ -35,7 +34,7 @@ export default class SchedulePage {
   }
 
   private REFRESH_DATA = () => {
-    getScheduleList(this.category.name).then(scheduleList => {
+    getScheduleList(this.category).then(scheduleList => {
       this.scheduleList = new ScheduleList(this.category, this.absorb, scheduleList?.sort((a) => a.isCompleted ? 1 : -1) ?? []);
       this.create();
       this.render();

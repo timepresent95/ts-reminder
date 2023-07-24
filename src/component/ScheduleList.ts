@@ -6,7 +6,6 @@ import Position from "../utility/Position";
 import { createRandomKey } from "../utility/Random";
 import ContextMenu from "./ContextMenu";
 import { deleteSchedule } from "../utility/firestoreManager";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class ScheduleList extends DraggableList {
   private readonly category: ScheduleCategory;
@@ -21,13 +20,13 @@ export default class ScheduleList extends DraggableList {
   private contextMenu: ContextMenu = ContextMenu.getInstance();
   private renderingEl: HTMLElement;
 
-  constructor(category: ScheduleCategory, emit: EventPipe, schedules?: SimplifySchedule[]) {
+  constructor(category: ScheduleCategory, emit: EventPipe, schedules?: ScheduleData[]) {
     super(document.createElement("ol"), schedules?.map(({
       key,
       title,
       notes,
       isCompleted
-    }) => new Schedule(this.category, title, notes, isCompleted, key)) ?? []);
+    }) => new Schedule(category, title, notes, isCompleted, key)) ?? []);
     this.category = category;
     this.emit = emit;
     this.currentEl.classList.add("schedules");
@@ -125,7 +124,7 @@ export default class ScheduleList extends DraggableList {
     if (item.selected) {
       this.cancelSelect(item);
     } else {
-      this.editItem?.endEditMode();
+      this.editItem?.endEditMode.call(item);
       this.editItem = null;
       this.doSelect(item);
     }
@@ -332,7 +331,7 @@ export default class ScheduleList extends DraggableList {
   };
 
   private removeSchedules = (targetList: Schedule[]) => {
-    Promise.allSettled(targetList.map(v => deleteSchedule(this.category.name, v))).then(removeResults => {
+    Promise.allSettled(targetList.map(v => deleteSchedule(v))).then(removeResults => {
       removeResults.forEach((result) => {
           if (result.status === "fulfilled") {
             this.currentEl.removeChild(result.value.currentEl);

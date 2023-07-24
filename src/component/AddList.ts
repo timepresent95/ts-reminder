@@ -3,10 +3,8 @@ import { Picker } from "emoji-mart";
 import { COLORS, EMOJI_CATEGORIES, ICONS } from "../constant";
 import Position from "../utility/Position";
 import { createCategories } from "../utility/firestoreManager";
-import ScheduleCategory from "../types/ScheduleCategory";
 
 export default class AddList {
-  private parentEl: HTMLElement | null = null;
   readonly currentEl = document.createElement("div");
   private readonly labelEl = document.createElement("label");
   private readonly inputEl = document.createElement("input");
@@ -71,7 +69,12 @@ export default class AddList {
 
     this.okButton.textContent = "OK";
     this.okButton.addEventListener("click", () => {
-      createCategories(new ScheduleCategory(this.inputEl.value, this.pickedColor, this.pickedIcon, this.isEmoji)).then(() => {
+      createCategories({
+        name: this.inputEl.value,
+        color: this.pickedColor,
+        icon: this.pickedIcon,
+        isEmoji: this.isEmoji
+      }).then(() => {
       }).catch(e => {
         console.error(e);
       }).finally(() => {
@@ -194,9 +197,4 @@ export default class AddList {
     document.body.append(this.iconPickerEl);
     document.body.addEventListener("mousedown", onClickOutside);
   };
-
-  mount(parentEl: HTMLElement) {
-    this.parentEl = parentEl;
-    this.parentEl.appendChild(this.currentEl);
-  }
 }
