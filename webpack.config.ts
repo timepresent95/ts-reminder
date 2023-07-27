@@ -1,4 +1,4 @@
-import { Configuration } from "webpack";
+import webpack from "webpack";
 import "webpack-dev-server";
 
 import path from "path";
@@ -12,7 +12,7 @@ const stylesHandler = isProduction
   ? MiniCssExtractPlugin.loader
   : "style-loader";
 
-const config: Configuration = {
+const config: webpack.Configuration = {
   entry: "./src/index.ts",
   output: {
     path: path.resolve(__dirname, "dist")
